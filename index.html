@@ -1,43 +1,8 @@
-bash
-
 python3 - << 'EOF'
 with open('/home/claude/index.html', 'r', encoding='utf-8') as f:
     content = f.read()
 
 old = '''function displayFluxImage(prompt, bubble) {
-  const cleanPrompt = encodeURIComponent(prompt.trim());
-  const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&nologo=true&model=flux`;
-
-  const loadingText = document.createElement('p');
-  loadingText.style.cssText = 'color:#885555;font-family:monospace;font-size:11px;margin:6px 0;letter-spacing:1px;';
-  loadingText.innerText = '⏳ جاري رسم الصورة...';
-  bubble.appendChild(loadingText);
-
-  const newImg = document.createElement('img');
-  newImg.alt = prompt;
-  newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;display:none;box-shadow:0 0 14px #8b000055;cursor:pointer;';
-
-  newImg.onload = function() {
-    loadingText.remove();
-    newImg.style.display = 'block';
-    const msgs = document.getElementById('chatMsgs');
-    if(msgs) msgs.scrollTop = msgs.scrollHeight;
-  };
-
-  newImg.onerror = function() {
-    loadingText.style.color = '#cc5555';
-    loadingText.innerText = '[!] فشل تحميل الصورة — جرب مرة تانية.';
-  };
-
-  newImg.onclick = function() { window.open(url, '_blank'); };
-  newImg.src = url;
-  bubble.appendChild(newImg);
-
-  const msgs = document.getElementById('chatMsgs');
-  if(msgs) msgs.scrollTop = msgs.scrollHeight;
-}'''
-
-new = '''function displayFluxImage(prompt, bubble) {
   const cleanPrompt = encodeURIComponent(prompt.trim());
   const randomSeed = Math.floor(Math.random() * 1000000);
   const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&nologo=true&model=turbo&seed=${randomSeed}`;
@@ -70,6 +35,34 @@ new = '''function displayFluxImage(prompt, bubble) {
     link.style.cssText = 'display:block;color:#885555;font-size:10px;font-family:monospace;margin-top:4px;word-break:break-all;';
     link.innerText = url;
     bubble.appendChild(link);
+  };
+
+  newImg.onclick = function() { window.open(url, '_blank'); };
+  newImg.src = url;
+  bubble.appendChild(newImg);
+
+  const msgs = document.getElementById('chatMsgs');
+  if(msgs) msgs.scrollTop = msgs.scrollHeight;
+}'''
+
+new = '''function displayFluxImage(prompt, bubble) {
+  const cleanPrompt = prompt.trim().replace(/\s+/g, ',');
+  const url = `https://loremflickr.com/800/600/${encodeURIComponent(cleanPrompt)}`;
+
+  const newImg = document.createElement('img');
+  newImg.alt = prompt;
+  newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;box-shadow:0 0 14px #8b000055;cursor:pointer;';
+
+  newImg.onload = function() {
+    console.log('✅ Image loaded:', url);
+    const msgs = document.getElementById('chatMsgs');
+    if(msgs) msgs.scrollTop = msgs.scrollHeight;
+  };
+
+  newImg.onerror = function() {
+    console.error('❌ Failed URL:', url);
+    this.onerror = null;
+    this.src = 'https://placehold.co/800x600/1a0000/cc5555?text=Error+Loading+Image';
   };
 
   newImg.onclick = function() { window.open(url, '_blank'); };
