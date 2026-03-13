@@ -1,51 +1,1612 @@
-python3 - << 'EOF'
-with open('/home/claude/index.html', 'r', encoding='utf-8') as f:
-    content = f.read()
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HazHackArena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0a0a0a; --panel:#0f0f0f; --border:#3a0000;
+  --red:#8b0000; --crimson:#cc0000; --blood:#5a0000;
+  --text:#c8b8b8; --green:#1a6a1a;
+  --shadow:4px 4px 0 #3a0000; --glow:0 0 8px #8b000055;
+}
+::-webkit-scrollbar{width:5px;background:#050505}
+::-webkit-scrollbar-thumb{background:#3a0000}
+body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text);font-size:13px}
 
-old = '''function displayFluxImage(prompt, bubble) {
-  const cleanPrompt = encodeURIComponent(prompt.trim());
-  const randomSeed = Math.floor(Math.random() * 1000000);
-  const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&nologo=true&model=turbo&seed=${randomSeed}`;
+/* ===== LOGIN ===== */
+#loginPage{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; background:#050505;
+  background-image:
+    radial-gradient(ellipse at 50% 0%,#3a000033 0%,transparent 60%),
+    repeating-linear-gradient(0deg,transparent,transparent 39px,#1a00001a 39px,#1a00001a 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,#1a00001a 39px,#1a00001a 40px);
+}
+.warning-bar{
+  position:fixed;top:0;left:0;right:0;background:#7a0000;color:#ffcccc;
+  text-align:center;padding:7px;font-size:13px;letter-spacing:1px;
+  border-bottom:2px solid #4a0000;z-index:10000;
+}
+.warning-bar span{animation:flicker 3s infinite}
+@keyframes flicker{0%,19%,21%,23%,100%{opacity:1}20%,22%{opacity:.3}}
+.login-container{
+  background:#0d0d0d;border:2px solid #5a0000;
+  box-shadow:0 0 30px #8b000044,6px 6px 0 #3a0000;
+  padding:36px 44px;width:390px;text-align:center;
+  position:relative;margin-top:44px;
+}
+.login-title-bar{
+  background:#1a0000;color:#cc5555;position:absolute;top:0;left:0;right:0;
+  padding:6px 12px;font-size:12px;display:flex;justify-content:space-between;
+  align-items:center;border-bottom:1px solid #4a0000;
+}
+.login-logo{
+  margin-top:34px;margin-bottom:12px;
+  font-family:'VT323',monospace;font-size:52px;
+  letter-spacing:3px;line-height:1;
+  text-shadow:0 0 20px #8b0000,0 0 40px #5a0000;
+}
+.login-logo .haz{color:#cc0000}
+.login-logo .rest{color:#777}
+.skull-div{font-size:22px;color:#4a0000;letter-spacing:8px;margin-bottom:14px}
+.sad-msg{
+  font-size:12px;color:#885555;margin-bottom:18px;
+  background:#1a0000;border:1px solid #4a0000;padding:8px 12px;font-style:italic;
+}
+.login-label{display:block;text-align:right;font-size:11px;color:#885555;margin-bottom:5px;letter-spacing:1px}
+.login-input{
+  width:100%;padding:8px 12px;border:1px solid #5a0000;background:#080808;
+  font-family:'Courier Prime',monospace;font-size:15px;color:#cc5555;
+  outline:none;margin-bottom:6px;box-shadow:inset 0 0 8px #3a000033;
+  direction:ltr;caret-color:#cc0000;
+}
+.login-input:focus{border-color:#cc0000;box-shadow:0 0 8px #8b000055,inset 0 0 6px #3a000033}
+.login-error{color:#cc0000;font-size:11px;min-height:20px;margin-bottom:12px;text-align:right}
+.login-btn{
+  width:100%;background:#1a0000;color:#cc5555;border:1px solid #8b0000;
+  padding:10px;font-family:'Courier Prime',monospace;font-size:14px;
+  font-weight:bold;cursor:pointer;letter-spacing:2px;
+  box-shadow:var(--glow);transition:all .2s;
+}
+.login-btn:hover{background:#3a0000;color:#ff5555;box-shadow:0 0 16px #8b0000}
+.login-btn:disabled{opacity:.4;cursor:not-allowed}
+.login-footer{margin-top:14px;font-size:10px;color:#3a2222}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 
-  const loadingText = document.createElement('p');
-  loadingText.style.cssText = 'color:#885555;font-family:monospace;font-size:11px;margin:6px 0;letter-spacing:1px;';
-  loadingText.innerText = '⏳ جاري رسم الصورة...';
-  bubble.appendChild(loadingText);
+/* ===== MAIN PAGE ===== */
+#mainPage{display:none;flex-direction:column;min-height:100vh;background:var(--bg);
+  background-image:radial-gradient(ellipse at 50% 0%,#2a000015 0%,transparent 50%)}
 
-  const newImg = document.createElement('img');
-  newImg.alt = prompt;
-  newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;display:none;box-shadow:0 0 14px #8b000055;cursor:pointer;';
+/* TOPBAR */
+.topbar{
+  height:50px;background:#080808;border-bottom:2px solid #3a0000;
+  display:flex;align-items:center;padding:0 16px;gap:10px;
+  box-shadow:0 2px 10px #3a000055;position:sticky;top:0;z-index:50;
+}
+.logo{
+  font-family:'VT323',monospace;font-size:32px;letter-spacing:2px;
+  background:none;border:none;cursor:pointer;padding:0;
+  text-shadow:0 0 10px #8b0000;
+}
+.logo .haz{color:#cc0000}
+.logo .rest{color:#666}
+.topbar-center{flex:1;display:flex;justify-content:center;padding:0 20px}
+.search-wrap{
+  display:flex;align-items:center;gap:0;
+  border:1px solid #3a0000;background:#060000;width:220px;
+}
+.search-wrap button{
+  background:#1a0000;color:#553333;border:none;border-left:1px solid #3a0000;
+  padding:5px 10px;cursor:pointer;font-family:monospace;
+}
+.search-wrap button:hover{color:#cc5555}
+.search-wrap input{
+  flex:1;background:none;border:none;color:#885555;padding:5px 8px;
+  font-family:'Courier Prime',monospace;font-size:12px;outline:none;
+}
+.topbar-right{display:flex;gap:6px;align-items:center}
+.top-btn{
+  background:#0a0000;color:#553333;border:1px solid #2a0000;
+  padding:5px 10px;cursor:pointer;font-family:'Courier Prime',monospace;
+  font-size:11px;letter-spacing:1px;transition:all .15s;
+}
+.top-btn:hover{background:#1a0000;color:#cc5555;border-color:#5a0000}
+.btn-delete:hover{background:#2a0000;color:#ff4444;border-color:#8b0000}
+.btn-save:hover{background:#001a00;color:#44ff44;border-color:#1a6a1a}
 
-  newImg.onload = function() {
-    console.log('✅ Image loaded:', url);
-    loadingText.remove();
-    newImg.style.display = 'block';
-    const msgs = document.getElementById('chatMsgs');
-    if(msgs) msgs.scrollTop = msgs.scrollHeight;
+/* LAYOUT */
+.main-layout{display:flex;min-height:calc(100vh - 50px)}
+
+/* LEFT SIDEBAR */
+.sidebar-left{
+  width:160px;background:#060606;border-left:2px solid #1a0000;
+  padding:10px 8px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;
+}
+.sidebar-label{font-size:9px;color:#2a1a1a;letter-spacing:2px;padding:4px 0;border-bottom:1px solid #1a0000}
+.quick-drop{
+  width:100%;aspect-ratio:1;border:1px dashed #3a0000;background:#050000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;transition:all .2s;overflow:hidden;
+}
+.quick-drop:hover{border-color:#8b0000;background:#0a0000}
+.q-plus{font-size:20px;color:#3a0000}
+.q-txt{font-size:9px;color:#2a1a1a;margin-top:4px}
+.quick-drop.has-img .q-plus,.quick-drop.has-img .q-txt{display:none}
+.quick-drop img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none}
+.quick-drop.has-img img{display:block}
+.quick-list{display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto}
+.quick-item{
+  font-size:9px;color:#553333;padding:3px 5px;border:1px solid #1a0000;
+  background:#050000;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.quick-item:hover{background:#1a0000;color:#cc5555}
+
+/* CENTER */
+.center-area{
+  flex:1;padding:16px;display:flex;flex-direction:column;
+  align-items:center;gap:14px;overflow-y:auto;
+}
+.drop-zone{
+  width:480px;height:200px;border:2px dashed #3a0000;background:#060000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;position:relative;
+}
+.drop-zone:hover,.drop-zone.drag-over{border-color:#8b0000;background:#0a0000;box-shadow:inset 0 0 20px #3a000033}
+.plus-icon{font-size:40px;color:#2a0000;line-height:1}
+.drop-text{font-size:14px;color:#553333;margin-top:8px;letter-spacing:2px}
+.drop-sub{font-size:10px;color:#2a1a1a;margin-top:4px}
+.img-name-display{font-size:11px;color:#553333;font-style:italic;min-height:18px}
+.rename-btn{
+  background:none;border:none;color:#3a1a1a;cursor:pointer;
+  font-size:10px;font-family:monospace;padding:0 4px;
+}
+.rename-btn:hover{color:#cc5555}
+
+/* INNER VIEWS */
+.inner-view{width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+.view-header-label{
+  font-size:10px;color:#3a1a1a;letter-spacing:3px;
+  border-bottom:1px solid #1a0000;padding-bottom:6px;width:100%;text-align:center;
+}
+.type-drop-zone{
+  width:480px;height:100px;border:1px dashed #2a0000;background:#050000;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:11px;color:#2a1a1a;letter-spacing:2px;transition:all .2s;
+}
+.type-drop-zone:hover{border-color:#5a0000;background:#080000;color:#885555}
+
+/* FILE ROWS */
+.file-list{width:480px;display:flex;flex-direction:column;gap:4px}
+.file-row{
+  display:flex;align-items:center;gap:8px;padding:6px 10px;
+  background:#060000;border:1px solid #1a0000;
+}
+.file-row:hover{border-color:#3a0000;background:#0a0000}
+.file-icon{font-size:14px;flex-shrink:0;color:#553333}
+.file-name{flex:1;font-size:11px;color:#885555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-date{font-size:9px;color:#2a1a1a;flex-shrink:0}
+.file-row-actions{display:flex;gap:4px;flex-shrink:0}
+.file-btn{
+  font-size:9px;padding:2px 6px;background:#0a0000;color:#553333;
+  border:1px solid #1a0000;cursor:pointer;font-family:monospace;
+}
+.file-btn:hover{background:#1a0000;color:#cc5555}
+
+/* IMG GRID */
+.img-grid{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.img-grid-cell{border:1px solid #2a0000;background:#060000;overflow:hidden}
+.img-grid-cell img{width:100%;height:90px;object-fit:cover;display:block;cursor:pointer}
+.img-grid-cell .cell-name{padding:3px 5px;font-size:9px;color:#553333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.img-grid-cell .cell-btns{display:flex;gap:2px;padding:0 4px 4px}
+.cell-btn{flex:1;font-size:9px;padding:2px;background:#1a0000;color:#cc5555;border:1px solid #3a0000;cursor:pointer}
+
+/* RIGHT SIDEBAR */
+.sidebar-right{
+  width:130px;background:#060606;border-right:2px solid #1a0000;
+  padding:10px 8px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;
+}
+.fmt-section-label{font-size:9px;color:#2a1a1a;letter-spacing:1px;text-align:center;padding:2px 0}
+.fmt-box{
+  background:#080000;border:1px solid #2a0000;color:#553333;
+  padding:8px 4px;text-align:center;cursor:pointer;
+  font-size:11px;letter-spacing:1px;transition:all .15s;
+}
+.fmt-box:hover{border-color:#5a0000;background:#0f0000;color:#cc5555}
+.fmt-box.active{border-color:#cc0000!important;background:#2a0000!important;color:#ff6666!important;box-shadow:0 0 14px #8b000088!important}
+.fmt-icon{font-size:16px;display:block;margin-bottom:3px}
+.add-box-btn{
+  background:#050000;border:1px dashed #1a0000;color:#2a1a1a;
+  padding:6px 4px;text-align:center;cursor:pointer;font-size:10px;
+  letter-spacing:1px;transition:all .15s;
+}
+.add-box-btn:hover{border-color:#3a0000;color:#553333}
+
+/* CONVERT */
+.convert-btn{
+  width:100%;background:#0a0a00;color:#665533;border:1px solid #2a2000;
+  padding:7px 4px;text-align:center;cursor:pointer;font-size:11px;
+  letter-spacing:1px;transition:all .15s;
+}
+.convert-btn:hover{background:#1a1a00;color:#ccaa44;border-color:#5a4a00}
+
+/* STATUS BAR */
+.status-bar{
+  background:#050505;border-top:1px solid #1a0000;
+  padding:4px 16px;display:flex;justify-content:space-between;align-items:center;
+  font-size:9px;color:#2a1a1a;letter-spacing:2px;
+}
+
+/* CHAT FLOAT */
+.chat-float{
+  position:fixed;bottom:24px;left:24px;
+  width:48px;height:48px;border-radius:50%;
+  background:#001a00;border:2px solid #1a6a1a;color:#55aa55;
+  font-size:13px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-family:monospace;
+  box-shadow:0 0 14px #1a6a1a55;transition:all .2s;z-index:100;
+}
+.chat-float:hover{background:#003300;box-shadow:0 0 20px #1a6a1a88}
+
+/* MODALS */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:#00000099;z-index:200;align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:#0a0000;border:2px solid #5a0000;
+  box-shadow:0 0 30px #8b000055,var(--shadow);
+  width:360px;max-height:80vh;overflow-y:auto;
+}
+.modal-titlebar{
+  background:#1a0000;color:#cc5555;padding:8px 12px;font-size:12px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid #4a0000;letter-spacing:1px;
+}
+.modal-close{
+  background:#2a0000;color:#cc5555;border:1px solid #5a0000;
+  padding:1px 7px;cursor:pointer;font-family:monospace;font-size:12px;
+}
+.modal-close:hover{background:#5a0000}
+.modal-body{padding:16px;display:flex;flex-direction:column;gap:10px}
+.modal-body label{display:block;font-size:11px;margin-bottom:4px;color:#885555;letter-spacing:1px}
+.modal-body input,.modal-body select{
+  width:100%;background:#060000;border:1px solid #3a0000;color:#cc5555;
+  padding:6px 8px;font-family:'Courier Prime',monospace;font-size:13px;outline:none;
+}
+.modal-body input:focus{border-color:#8b0000}
+.modal-btn{
+  background:#1a0000;color:#cc5555;border:1px solid #5a0000;
+  padding:8px;cursor:pointer;font-family:'Courier Prime',monospace;
+  font-size:12px;letter-spacing:1px;transition:all .15s;
+}
+.modal-btn:hover{background:#3a0000;color:#ff5555}
+.modal-btn.green{background:#001a00;color:#55cc55;border-color:#1a6a1a}
+.modal-btn.green:hover{background:#003300}
+
+/* CHAT MODAL */
+.chat-msgs{
+  height:280px;overflow-y:auto;background:#000d00;border:1px solid #0a2a0a;
+  padding:10px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;
+}
+.chat-msg{display:flex;flex-direction:column;gap:3px}
+.chat-msg.user{align-items:flex-start}
+.chat-msg.ai{align-items:flex-end}
+.ai-label{font-size:9px;color:#1a4a1a;letter-spacing:1px}
+.user-label{font-size:9px;color:#2a1a00;letter-spacing:1px}
+.bubble{
+  max-width:85%;padding:7px 10px;font-size:12px;line-height:1.5;
+  white-space:pre-wrap;word-break:break-word;
+  border-radius:4px;position:relative;
+  box-shadow:2px 2px 0px rgba(0,0,0,0.5);
+  animation:fadeIn 0.3s ease-in;
+}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.bubble canvas{
+  border:1px solid #1a6a1a;background:#000;
+  max-width:100%;image-rendering:pixelated;margin:10px 0;display:block;
+}
+.chat-msg.ai .bubble{background:#001500;border:1px solid #0a3a0a;color:#77cc77}
+.chat-msg.user .bubble{background:#0a0500;border:1px solid #2a1a00;color:#cc9955}
+.chat-input-row{display:flex;gap:6px}
+.chat-input-row input{
+  flex:1;background:#000d00;border:1px solid #0a2a0a;color:#77cc77;
+  padding:6px 8px;font-family:'Courier Prime',monospace;font-size:12px;outline:none;
+}
+.chat-send{
+  background:#001500;color:#55cc55;border:1px solid #1a5a1a;
+  padding:6px 12px;cursor:pointer;font-family:monospace;font-size:11px;
+}
+.chat-send:hover{background:#003300}
+
+/* HISTORY */
+.history-item{
+  font-size:11px;color:#885555;padding:5px 8px;border:1px solid #1a0000;
+  background:#050000;cursor:pointer;margin-bottom:3px;
+}
+.history-item:hover{background:#1a0000}
+
+/* TEXT EDITOR */
+.text-editor-wrap{width:100%;max-width:640px;display:flex;flex-direction:column;gap:8px}
+.text-toolbar{
+  display:flex;gap:6px;align-items:center;
+  background:#0a0000;border:1px solid #3a0000;padding:6px 10px;
+}
+.txt-tool-btn{
+  background:#1a0000;color:#cc5555;border:1px solid #3a0000;
+  padding:3px 10px;cursor:pointer;font-family:'Courier Prime',monospace;
+  font-size:11px;transition:all .15s;
+}
+.txt-tool-btn:hover,.txt-tool-btn.active{background:#3a0000;color:#ff6666}
+.text-editor-area{
+  width:100%;min-height:320px;background:#0d0000;border:1px solid #3a0000;
+  color:#cc5555;font-family:'Courier Prime',monospace;font-size:14px;
+  padding:14px;resize:vertical;outline:none;line-height:1.7;direction:rtl;
+}
+.text-editor-area:focus{border-color:#8b0000}
+.text-editor-footer{
+  display:flex;gap:8px;align-items:center;
+  background:#080808;border:1px solid #2a0000;padding:6px 10px;
+}
+.text-saved-list{width:100%;max-width:640px;margin-top:4px}
+.text-saved-item{
+  background:#080808;border:1px solid #2a0000;padding:8px 12px;
+  margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;color:#885555;
+}
+.text-preview-wrap{
+  width:100%;max-width:640px;border:1px solid #3a0000;
+  padding:16px;min-height:60px;margin-top:4px;
+  font-family:'Courier Prime',monospace;font-size:14px;
+  line-height:1.7;direction:rtl;word-break:break-word;
+}
+
+/* NOTIF */
+.notif{
+  position:fixed;bottom:86px;left:24px;
+  background:#1a0000;color:#cc5555;padding:8px 16px;
+  font-family:'Courier Prime',monospace;font-size:11px;
+  border:1px solid #5a0000;box-shadow:0 0 14px #8b000044;
+  z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;letter-spacing:1px;
+}
+.notif.show{opacity:1}
+
+/* ===== MOBILE FAB ===== */
+.mob-fab-wrap{display:none}
+@media(max-width:768px){
+  /* hide sidebars completely */
+  .sidebar-left,.sidebar-right{display:none!important}
+  /* main layout: no flex row */
+  .main-layout{flex-direction:column}
+  /* topbar compact */
+  .topbar{padding:0 8px;gap:4px;flex-wrap:nowrap;overflow:hidden}
+  .logo{font-size:22px;flex-shrink:0}
+  .topbar-center{padding:0 4px}
+  .search-wrap{width:100px}
+  .top-btn{padding:3px 5px;font-size:9px;letter-spacing:0;flex-shrink:0}
+  /* center full width, no overflow */
+  .center-area{padding:8px;width:100%;overflow-x:hidden}
+  .drop-zone{width:100%!important;max-width:100%}
+  .type-drop-zone{width:100%!important;max-width:100%}
+  .file-list{width:100%!important;max-width:100%}
+  .file-row{width:100%!important;max-width:100%;flex-wrap:wrap}
+  .img-grid{grid-template-columns:repeat(2,1fr)!important;width:100%!important}
+  .text-editor-wrap{max-width:100%;width:100%}
+  .text-preview-wrap{max-width:100%;width:100%}
+  .text-saved-list{max-width:100%;width:100%}
+  .text-saved-item{flex-wrap:wrap;gap:4px}
+  /* modals: full width, scrollable */
+  .modal-overlay{align-items:flex-end}
+  .modal{width:100%!important;max-height:85vh;border-radius:0;margin:0}
+  /* chat modal taller */
+  #chatModal .modal{max-height:90vh}
+  .chat-msgs{height:200px}
+  /* hide desktop chat float */
+  .chat-float{display:none!important}
+  /* padding for FAB */
+  #mainPage{padding-bottom:70px}
+  /* status bar smaller */
+  .status-bar{font-size:8px;padding:3px 8px}
+
+  /* FAB */
+  .mob-fab-wrap{
+    display:block;position:fixed;bottom:18px;right:16px;z-index:500;
+  }
+  .mob-fab-main{
+    width:52px;height:52px;border-radius:50%;
+    background:#3a0000;border:2px solid #cc0000;color:#ff5555;
+    font-size:22px;font-family:monospace;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 18px #8b000066;transition:all .2s;
+  }
+  .mob-fab-main.open{background:#001a00;border-color:#1a6a1a;color:#55aa55}
+  .mob-fab-items{
+    display:none;flex-direction:column-reverse;gap:6px;
+    position:absolute;bottom:60px;right:5px;align-items:flex-end;
+  }
+  .mob-fab-items.open{display:flex}
+  .mob-fab-item{
+    background:#0d0000;border:1px solid #5a0000;
+    color:#cc5555;cursor:pointer;font-family:monospace;font-size:11px;
+    padding:6px 14px;white-space:nowrap;
+    box-shadow:0 0 10px #8b000044;transition:all .15s;
+  }
+  .mob-fab-item:active{background:#2a0000;color:#ff6666}
+  .mob-fab-item.ai-btn{background:#001500;border-color:#1a6a1a;color:#55aa55}
+}
+@media(min-width:769px){
+  .mob-fab-wrap{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="warning-bar" id="warningBar">
+    <span>(!) غلط تخش على أي لينك :( (!)</span>
+  </div>
+  <div class="login-container" id="loginBox">
+    <div class="login-title-bar">
+      <span>HazHackArena v1.0 -- [RESTRICTED]</span>
+      <span style="color:#3a0000">[*] [ ] [x]</span>
+    </div>
+    <div class="login-logo"><span class="haz">Haz</span><span class="rest">HackArena</span></div>
+    <div class="skull-div">(x) (x) (x)</div>
+    <div class="sad-msg">[ خطأ 403 ] -- وصول مرفوض. لا تملك صلاحية الدخول.</div>
+    <label class="login-label" for="passInput">// ENTER PASSWORD:</label>
+    <input class="login-input" type="password" id="passInput" placeholder="* * * * * * * *" autofocus/>
+    <div class="login-error" id="errMsg"></div>
+    <button class="login-btn" onclick="tryLogin()">[ دخول ] [&gt;]</button>
+    <div class="login-footer">c 2009 HazHackArena -- UNAUTHORIZED ACCESS PROHIBITED</div>
+  </div>
+</div>
+
+<!-- MAIN PAGE -->
+<div id="mainPage" style="display:none">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="logo" onclick="goToLogin()"><span class="haz">Haz</span><span class="rest">HackArena</span></button>
+    <div class="topbar-center">
+      <div class="search-wrap">
+        <button onclick="doSearch()">[?]</button>
+        <input type="text" id="searchInput" placeholder="// ابحث عن ملف..." onkeydown="if(event.key==='Enter')doSearch()"/>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="top-btn" onclick="openModal('historyModal')">[LOG] هستوري</button>
+      <button class="top-btn btn-save" onclick="saveAll()">[S] Save</button>
+      <button class="top-btn" onclick="document.getElementById('topImport').click()">[L] Import</button>
+      <input type="file" id="topImport" accept=".json" style="display:none" onchange="importFromJson(this)"/>
+      <button class="top-btn btn-delete" onclick="openModal('deleteModal')">[X] Delete</button>
+    </div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div class="main-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar-left">
+      <div class="sidebar-label">// QUICK ACCESS</div>
+      <div class="quick-drop" id="quickDrop"
+        onclick="document.getElementById('quickDropInput').click()"
+        ondragover="event.preventDefault()"
+        ondrop="handleQuickDrop(event)">
+        <div class="q-plus">[+]</div>
+        <div class="q-txt">drag img</div>
+        <img id="quickImg" src="" alt=""/>
+      </div>
+      <input type="file" id="quickDropInput" accept="image/*" style="display:none" onchange="handleQuickFile(this.files[0])"/>
+      <div class="sidebar-label">// HISTORY</div>
+      <div class="quick-list" id="quickImgList"></div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center-area" id="centerArea">
+
+      <!-- HOME VIEW -->
+      <div id="view_home" class="inner-view">
+        <div class="drop-zone" id="dropZone"
+          onclick="document.getElementById('dropInput').click()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleDrop(event)">
+          <div class="plus-icon">[+]</div>
+          <div class="drop-text">// DROP IMAGES HERE</div>
+          <div class="drop-sub">jpg / jpeg / png / gif / webp</div>
+          <img id="previewImg" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover"/>
+        </div>
+        <input type="file" id="dropInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)"/>
+        <div class="img-name-display" id="imgNameDisplay"></div>
+        <div id="homeImgGrid" class="img-grid" style="width:100%;max-width:640px"></div>
+        <div id="searchResults" style="width:100%;max-width:640px"></div>
+      </div>
+
+      <!-- VIDEO VIEW -->
+      <div id="view_video" class="inner-view" style="display:none">
+        <div class="view-header-label">// [VID] VIDEO FILES</div>
+        <div class="type-drop-zone" onclick="document.getElementById('inp_video').click()"
+          ondragover="event.preventDefault()" ondrop="handleTypeDrop(event,'video')">
+          [+] اسحب او اضغط لرفع فيديو
+        </div>
+        <input type="file" id="inp_video" accept="video/*" multiple style="display:none" onchange="handleTypeFiles(this.files,'video')"/>
+        <div class="file-list" id="flist_video"></div>
+      </div>
+
+      <!-- DOC VIEW -->
+      <div id="view_doc" class="inner-view" style="display:none">
+        <div class="view-header-label">// [DOC] DOCUMENTS</div>
+        <div class="type-drop-zone" onclick="document.getElementById('inp_doc').click()"
+          ondragover="event.preventDefault()" ondrop="handleTypeDrop(event,'doc')">
+          [+] اسحب او اضغط لرفع مستند
+        </div>
+        <input type="file" id="inp_doc" accept=".doc,.docx,.txt,.md" multiple style="display:none" onchange="handleTypeFiles(this.files,'doc')"/>
+        <div class="file-list" id="flist_doc"></div>
+      </div>
+
+      <!-- PDF VIEW -->
+      <div id="view_pdf" class="inner-view" style="display:none">
+        <div class="view-header-label">// [PDF] PDF FILES</div>
+        <div class="type-drop-zone" onclick="document.getElementById('inp_pdf').click()"
+          ondragover="event.preventDefault()" ondrop="handleTypeDrop(event,'pdf')">
+          [+] اسحب او اضغط لرفع PDF
+        </div>
+        <input type="file" id="inp_pdf" accept=".pdf" multiple style="display:none" onchange="handleTypeFiles(this.files,'pdf')"/>
+        <div class="file-list" id="flist_pdf"></div>
+      </div>
+
+      <!-- AUDIO VIEW -->
+      <div id="view_audio" class="inner-view" style="display:none">
+        <div class="view-header-label">// [AUD] AUDIO FILES</div>
+        <div class="type-drop-zone" onclick="document.getElementById('inp_audio').click()"
+          ondragover="event.preventDefault()" ondrop="handleTypeDrop(event,'audio')">
+          [+] اسحب او اضغط لرفع صوت
+        </div>
+        <input type="file" id="inp_audio" accept="audio/*" multiple style="display:none" onchange="handleTypeFiles(this.files,'audio')"/>
+        <div class="file-list" id="flist_audio"></div>
+      </div>
+
+      <!-- TEXT EDITOR VIEW -->
+      <div id="view_text" class="inner-view" style="display:none">
+        <div class="view-header-label">// [T] TEXT EDITOR</div>
+        <div class="text-editor-wrap">
+          <div class="text-toolbar">
+            <span style="font-size:10px;color:#3a1a1a;letter-spacing:1px">// لون النص:</span>
+            <button class="txt-tool-btn active" id="tbRed"   onclick="setTxtColor('#cc5555','tbRed')"  >[R] احمر</button>
+            <button class="txt-tool-btn"        id="tbWhite" onclick="setTxtColor('#eeeeee','tbWhite')">[W] ابيض</button>
+            <button class="txt-tool-btn"        id="tbBlack" onclick="setTxtColor('#111111','tbBlack')">[B] اسود</button>
+          </div>
+          <textarea class="text-editor-area" id="textArea" placeholder="// اكتب هنا..."></textarea>
+          <div class="text-editor-footer">
+            <input type="text" id="textDocName" placeholder="اسم المستند..."
+              style="flex:1;background:#080808;border:1px solid #2a0000;color:#885555;padding:5px 8px;font-family:monospace;font-size:12px;outline:none"/>
+            <button class="txt-tool-btn" onclick="saveTxtDoc()">[SAV] حفظ</button>
+            <button class="txt-tool-btn" onclick="document.getElementById('txtImgInp').click()">[IMG]+</button>
+            <button class="txt-tool-btn" onclick="document.getElementById('txtAudInp').click()">[AUD]+</button>
+            <input type="file" id="txtImgInp" accept="image/*" style="display:none" onchange="insertTxtMedia(this,'img')"/>
+            <input type="file" id="txtAudInp" accept="audio/*" style="display:none" onchange="insertTxtMedia(this,'aud')"/>
+          </div>
+          <div id="txtPreview" class="text-preview-wrap" style="display:none"></div>
+          <div class="text-saved-list" id="txtSavedList"></div>
+        </div>
+      </div>
+
+      <!-- CUSTOM VIEWS -->
+      <div id="view_custom" class="inner-view" style="display:none"></div>
+
+    </div><!-- end center -->
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="sidebar-right">
+      <div class="fmt-section-label">-- FILES --</div>
+      <div class="fmt-box active" id="box_home"  onclick="switchView('home')" ><span class="fmt-icon">[IMG]</span>IMAGE</div>
+      <div class="fmt-box"        id="box_video" onclick="switchView('video')"><span class="fmt-icon">[VID]</span>VIDEO</div>
+      <div class="fmt-box"        id="box_doc"   onclick="switchView('doc')"  ><span class="fmt-icon">[DOC]</span>DOC</div>
+      <div class="fmt-box"        id="box_pdf"   onclick="switchView('pdf')"  ><span class="fmt-icon">[PDF]</span>PDF</div>
+      <div class="fmt-box"        id="box_audio" onclick="switchView('audio')"><span class="fmt-icon">[AUD]</span>AUDIO</div>
+      <div class="fmt-box"        id="box_text"  onclick="switchView('text')" ><span class="fmt-icon">[T]</span>TEXT</div>
+      <div class="fmt-section-label">-- CONVERT --</div>
+      <div class="convert-btn" onclick="openModal('convertModal')">[CVT] Convert</div>
+      <div class="fmt-section-label">-- CUSTOM --</div>
+      <div id="customBoxes"></div>
+      <div class="add-box-btn" onclick="openModal('addBoxModal')">[+] مربع جديد</div>
+    </div>
+
+  </div><!-- end layout -->
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span id="statusClock">--:--:--</span>
+    <span>HazHackArena v1.0 // SECURE</span>
+    <span id="statusImgCount">IMAGES: 0</span>
+  </div>
+
+  <!-- CHAT FLOAT (desktop) -->
+  <div class="chat-float" onclick="openModal('chatModal')">[AI]</div>
+
+  <!-- MOBILE FAB (phone only) -->
+  <div class="mob-fab-wrap" id="mobFabWrap">
+    <div class="mob-fab-items" id="mobFabItems">
+      <button class="mob-fab-item ai-btn" onclick="openModal('chatModal');closeMobFab()">[AI] AIhaz</button>
+      <button class="mob-fab-item" onclick="switchView('audio');closeMobFab()">[AUD] صوت</button>
+      <button class="mob-fab-item" onclick="switchView('pdf');closeMobFab()">[PDF] PDF</button>
+      <button class="mob-fab-item" onclick="switchView('doc');closeMobFab()">[DOC] مستندات</button>
+      <button class="mob-fab-item" onclick="switchView('video');closeMobFab()">[VID] فيديو</button>
+      <button class="mob-fab-item" onclick="switchView('text');closeMobFab()">[T] نصوص</button>
+      <button class="mob-fab-item" onclick="switchView('home');closeMobFab()">[IMG] صور</button>
+      <button class="mob-fab-item" onclick="saveAll();closeMobFab()">[S] حفظ</button>
+    </div>
+    <button class="mob-fab-main" id="mobFabMain" onclick="toggleMobFab()">[+]</button>
+  </div>
+
+</div><!-- end mainPage -->
+
+<div class="notif" id="notif"></div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- DELETE -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-titlebar">(!) حذف كل شيء -- [DANGER]<button class="modal-close" onclick="closeModal('deleteModal')">[x]</button></div>
+    <div class="modal-body">
+      <p style="color:#cc0000;font-size:11px;letter-spacing:1px">[!] WARNING -- لازم تكتب باسورد الحذف!</p>
+      <label>// DELETE PASSWORD:</label>
+      <input type="password" id="deletePass" placeholder="* * * *"/>
+      <div id="deleteErr" style="color:#cc0000;font-size:11px;min-height:16px"></div>
+      <button class="modal-btn" onclick="confirmDelete()">[ تأكيد الحذف ]</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-titlebar">[LOG] سجل الملفات<button class="modal-close" onclick="closeModal('historyModal')">[x]</button></div>
+    <div class="modal-body">
+      <div id="historyList" style="max-height:300px;overflow-y:auto"></div>
+      <div class="fmt-section-label" style="margin-top:8px">-- استيراد JSON --</div>
+      <input type="file" id="histImport" accept=".json" style="display:none" onchange="importFromJson(this)"/>
+      <button class="modal-btn" onclick="document.getElementById('histImport').click()">[L] Import JSON</button>
+      <div id="histImportStatus" style="font-size:10px;color:#553333;min-height:14px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONVERT -->
+<div class="modal-overlay" id="convertModal">
+  <div class="modal">
+    <div class="modal-titlebar">[CVT] تحويل الملفات<button class="modal-close" onclick="closeModal('convertModal')">[x]</button></div>
+    <div class="modal-body">
+      <label>// اختر ملف:</label>
+      <input type="file" id="cvtFile"/>
+      <label>// تحويل الى:</label>
+      <select id="cvtTo">
+        <option value="png">PNG</option>
+        <option value="jpeg">JPEG</option>
+        <option value="webp">WEBP</option>
+        <option value="txt">TXT</option>
+      </select>
+      <button class="modal-btn green" onclick="confirmConvert()">[CVT] تحويل</button>
+      <div id="cvtStatus" style="font-size:11px;color:#553333;min-height:16px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BOX -->
+<div class="modal-overlay" id="addBoxModal">
+  <div class="modal">
+    <div class="modal-titlebar">[+] مربع جديد<button class="modal-close" onclick="closeModal('addBoxModal')">[x]</button></div>
+    <div class="modal-body">
+      <label>// اسم المربع:</label><input type="text" id="newBoxName" placeholder="مثل: صور RAW"/>
+      <label>// الامتداد:</label><input type="text" id="newBoxExt" placeholder="raw, png"/>
+      <label>// أيقونة:</label><input type="text" id="newBoxIcon" placeholder="[BOX]" maxlength="5"/>
+      <button class="modal-btn green" onclick="confirmAddBox()">[ إنشاء ]</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal">
+    <div class="modal-titlebar">[E] تغيير الاسم<button class="modal-close" onclick="closeModal('renameModal')">[x]</button></div>
+    <div class="modal-body">
+      <label>// الاسم الجديد:</label>
+      <input type="text" id="renameInput" placeholder="الاسم الجديد..."/>
+      <button class="modal-btn green" onclick="confirmRename()">[ تأكيد ]</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH FILTER -->
+<div class="modal-overlay" id="searchFilterModal">
+  <div class="modal">
+    <div class="modal-titlebar">[?] بحث متقدم<button class="modal-close" onclick="closeModal('searchFilterModal')">[x]</button></div>
+    <div class="modal-body">
+      <label>// نوع الملف:</label>
+      <select id="srchType">
+        <option value="all">الكل</option><option value="image">صورة</option>
+        <option value="video">فيديو</option><option value="doc">مستند</option>
+        <option value="pdf">PDF</option><option value="audio">صوت</option>
+      </select>
+      <label>// التاريخ:</label><input type="date" id="srchDate"/>
+      <label>// اسم الملف:</label><input type="text" id="srchName" placeholder="اسم الملف..."/>
+      <button class="modal-btn green" onclick="confirmSearch()">[ بحث ]</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-titlebar" style="background:#001a00;color:#55cc55;border-bottom-color:#1a3a1a">
+      [AI] AIhaz -- TERMINAL
+      <button class="modal-close" style="background:#003300;color:#55ff55;border-color:#1a5a1a" onclick="closeModal('chatModal')">[x]</button>
+    </div>
+    <div class="modal-body" style="padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:9px;color:#1a3a1a;letter-spacing:1px" id="ownerBadge"></span>
+        <button onclick="clearChatHistory()" style="font-size:9px;padding:2px 8px;background:#0a0000;color:#553333;border:1px solid #2a0000;cursor:pointer;font-family:monospace">[DEL] مسح المحادثة</button>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="chat-msg ai">
+          <div class="ai-label">نور 🌸</div>
+          <div class="bubble">أهلاً يا حازم 🌸 أنا نور.. كنت مستنياك! 💕</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <button class="chat-send" onclick="sendChat()">[&gt;] ارسال</button>
+        <textarea id="chatInput" placeholder="// اكتب هنا..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+          style="flex:1;background:#000d00;border:1px solid #0a2a0a;color:#77cc77;padding:6px 8px;font-family:'Courier Prime',monospace;font-size:12px;outline:none;resize:none;overflow-y:auto;line-height:1.4"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// PASSWORDS (SHA-256 pure JS — works on file://)
+// Login:  #$Try_Hack_Me$#!
+// Delete: ARC ARC 12345
+// Owner:  انا حازم
+// ============================================================
+const PASS_HASH   = 'c195bad17938e5fd4a51ec160340a2b650eb4cead74be81f75fffc5e7d5ddf02';
+const DELETE_HASH = '4a9b40a235826708575abc1e0653b3fe22634a239082001293121bf377b11b0a';
+const OWNER_HASH  = '8205b33972af5bb29f3a9a1e9b4a97bf49acaca22ee7fd03bf597d141488e30d';
+
+function sha256(str){
+  function rr(v,a){return(v>>>a)|(v<<(32-a))}
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const b=[...new TextEncoder().encode(str)];
+  b.push(0x80);
+  while(b.length%64!==56)b.push(0);
+  const bl=str.length*8;
+  for(let i=7;i>=0;i--)b.push((bl/Math.pow(2,i*8))&0xff);
+  for(let c=0;c<b.length;c+=64){
+    const w=[];
+    for(let i=0;i<16;i++)w[i]=(b[c+i*4]<<24)|(b[c+i*4+1]<<16)|(b[c+i*4+2]<<8)|b[c+i*4+3];
+    for(let i=16;i<64;i++){const s0=rr(w[i-15],7)^rr(w[i-15],18)^(w[i-15]>>>3);const s1=rr(w[i-2],17)^rr(w[i-2],19)^(w[i-2]>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0}
+    let [a,b2,c2,d,e,f,g,h]=H;
+    for(let i=0;i<64;i++){const S1=rr(e,6)^rr(e,11)^rr(e,25);const ch=(e&f)^(~e&g);const t1=(h+S1+ch+K[i]+w[i])>>>0;const S0=rr(a,2)^rr(a,13)^rr(a,22);const maj=(a&b2)^(a&c2)^(b2&c2);const t2=(S0+maj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c2;c2=b2;b2=a;a=(t1+t2)>>>0}
+    H=[H[0]+a,H[1]+b2,H[2]+c2,H[3]+d,H[4]+e,H[5]+f,H[6]+g,H[7]+h].map(v=>v>>>0);
+  }
+  return H.map(v=>v.toString(16).padStart(8,'0')).join('');
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let isLoggedIn = false;
+let ownerVerified = false;
+let currentView = 'home';
+let currentTxtColor = '#cc5555';
+let chatImgB64 = null, chatImgMime = null;
+let chatHistory = [];
+let textDocs = [];
+let renameCtx = null;
+
+const appState = {
+  images: [],
+  video: [], doc: [], pdf: [], audio: [],
+  custom: {},
+  history: []
+};
+
+// ============================================================
+// LOCKOUT
+// ============================================================
+function getLock(){try{const r=localStorage.getItem('haz_lock');if(r)return JSON.parse(r);}catch(e){}return{attempts:0,lockedUntil:null}}
+function setLock(d){try{localStorage.setItem('haz_lock',JSON.stringify(d));}catch(e){}}
+function isLocked(){const d=getLock();if(!d.lockedUntil)return false;if(Date.now()<d.lockedUntil)return true;setLock({attempts:0,lockedUntil:null});return false}
+function lockRemaining(){const d=getLock();if(!d.lockedUntil)return'';const r=d.lockedUntil-Date.now();if(r<=0)return'';return Math.floor(r/3600000)+'س '+Math.floor((r%3600000)/60000)+'د '+Math.floor((r%60000)/1000)+'ث'}
+let lockTimer=null;
+function startLockTimer(){
+  if(lockTimer)clearInterval(lockTimer);
+  lockTimer=setInterval(()=>{
+    if(!isLocked()){clearInterval(lockTimer);document.getElementById('errMsg').textContent='';document.getElementById('passInput').disabled=false;document.querySelector('.login-btn').disabled=false;return}
+    document.getElementById('errMsg').textContent='(!) محظور -- متبقي: '+lockRemaining();
+  },1000);
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+function tryLogin(){
+  const val = document.getElementById('passInput').value;
+  const err = document.getElementById('errMsg');
+  const box = document.getElementById('loginBox');
+  if(isLocked()){
+    err.style.color='#cc0000';
+    err.textContent='(!) محظور -- '+lockRemaining();
+    document.getElementById('passInput').value='';
+    return;
+  }
+  const h = sha256(val);
+  if(h === PASS_HASH){
+    setLock({attempts:0,lockedUntil:null});
+    err.style.color='#55cc55';
+    err.textContent='[OK] ACCESS GRANTED -- جاري الدخول...';
+    setTimeout(()=>{
+      isLoggedIn=true;
+      document.getElementById('loginPage').style.display='none';
+      document.getElementById('warningBar').style.display='none';
+      const mp=document.getElementById('mainPage');
+      mp.style.display='flex';
+      mp.style.flexDirection='column';
+      startClock();
+      loadFromStorage();
+    },700);
+  } else {
+    const d=getLock();
+    const attempts=(d.attempts||0)+1;
+    if(attempts>=3){
+      setLock({attempts,lockedUntil:Date.now()+24*60*60*1000});
+      err.style.color='#cc0000';
+      err.textContent='(!) محظور 24 ساعة!';
+      document.getElementById('passInput').disabled=true;
+      document.querySelector('.login-btn').disabled=true;
+      startLockTimer();
+    } else {
+      setLock({attempts,lockedUntil:null});
+      err.style.color='#cc0000';
+      err.textContent='[ERR] ACCESS DENIED -- متبقيلك '+(3-attempts)+' محاولة';
+      box.classList.remove('shake');
+      void box.offsetWidth;
+      box.classList.add('shake');
+    }
+    document.getElementById('passInput').value='';
+  }
+}
+
+function goToLogin(){
+  isLoggedIn=false;
+  document.getElementById('mainPage').style.display='none';
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('warningBar').style.display='block';
+  document.getElementById('passInput').value='';
+  document.getElementById('errMsg').textContent='';
+  if(isLocked()){
+    document.getElementById('passInput').disabled=true;
+    document.querySelector('.login-btn').disabled=true;
+    document.getElementById('errMsg').style.color='#cc0000';
+    document.getElementById('errMsg').textContent='(!) محظور -- '+lockRemaining();
+    startLockTimer();
+  } else {
+    document.getElementById('passInput').disabled=false;
+    document.querySelector('.login-btn').disabled=false;
+  }
+}
+
+document.getElementById('passInput').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin()});
+window.addEventListener('DOMContentLoaded',()=>{
+  if(isLocked()){
+    document.getElementById('passInput').disabled=true;
+    document.querySelector('.login-btn').disabled=true;
+    document.getElementById('errMsg').style.color='#cc0000';
+    document.getElementById('errMsg').textContent='(!) محظور -- '+lockRemaining();
+    startLockTimer();
+  }
+});
+
+// ============================================================
+// CLOCK
+// ============================================================
+function startClock(){
+  setInterval(()=>{
+    const n=new Date();
+    document.getElementById('statusClock').textContent=
+      n.toLocaleTimeString('ar-EG');
+  },1000);
+}
+
+// ============================================================
+// VIEW SWITCHING
+// ============================================================
+const allViews = ['home','video','doc','pdf','audio','text','custom'];
+const allBoxes = ['home','video','doc','pdf','audio','text'];
+
+function switchView(type, customKey){
+  currentView = type;
+  allViews.forEach(v=>{ const el=document.getElementById('view_'+v); if(el) el.style.display='none'; });
+  allBoxes.forEach(b=>{ const el=document.getElementById('box_'+b); if(el) el.classList.remove('active'); });
+  document.querySelectorAll('.custom-box').forEach(b=>b.classList.remove('active'));
+
+  if(type==='custom' && customKey){
+    document.getElementById('view_custom').style.display='flex';
+    buildCustomView(customKey);
+    const cb=document.getElementById('cbox_'+customKey);
+    if(cb) cb.classList.add('active');
+  } else {
+    const vEl=document.getElementById('view_'+type);
+    if(vEl) vEl.style.display='flex';
+    const bEl=document.getElementById('box_'+type);
+    if(bEl) bEl.classList.add('active');
+    if(type==='text') renderTxtDocs();
+  }
+}
+
+// ============================================================
+// HOME IMAGES
+// ============================================================
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+}
+function handleFiles(files){
+  if(!files||!files.length)return;
+  Array.from(files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const idx=appState.images.length;
+      appState.images.push({name:file.name,src:ev.target.result,date:new Date().toLocaleDateString('ar-EG')});
+      addToHistory(file.name,'image');
+      updateImgCount();
+      addToQuickList(file.name,idx);
+      renderHomeGrid();
+      // show last in preview
+      const img=document.getElementById('previewImg');
+      img.src=ev.target.result; img.style.display='block';
+      document.querySelector('.plus-icon').style.display='none';
+      document.querySelector('.drop-text').style.display='none';
+      document.querySelector('.drop-sub').style.display='none';
+      document.getElementById('imgNameDisplay').innerHTML=
+        '[IMG] <span id="curImgName">'+file.name+'</span> <button class="rename-btn" onclick="openRename(\'image\','+idx+')">[E]</button>';
+    };
+    reader.readAsDataURL(file);
+  });
+  showNotif('[OK] تمت الاضافة');
+}
+function renderHomeGrid(){
+  const g=document.getElementById('homeImgGrid'); if(!g)return;
+  g.innerHTML=appState.images.map((img,i)=>`
+    <div class="img-grid-cell">
+      <img src="${img.src}" onclick="previewHomeImg(${i})" title="${img.name}"/>
+      <div class="cell-name">${img.name}</div>
+      <div class="cell-btns">
+        <button class="cell-btn" onclick="openRename('image',${i})">[E]</button>
+        <button class="cell-btn" onclick="delHomeImg(${i})">[X]</button>
+      </div>
+    </div>`).join('');
+}
+function previewHomeImg(i){
+  const img=appState.images[i]; if(!img)return;
+  document.getElementById('previewImg').src=img.src;
+  document.getElementById('previewImg').style.display='block';
+}
+function delHomeImg(i){
+  appState.images.splice(i,1);
+  renderHomeGrid(); updateImgCount();
+  if(!appState.images.length){
+    document.getElementById('previewImg').style.display='none';
+    document.querySelector('.plus-icon').style.display='';
+    document.querySelector('.drop-text').style.display='';
+    document.querySelector('.drop-sub').style.display='';
+    document.getElementById('imgNameDisplay').textContent='';
+  }
+  showNotif('[X] تم الحذف');
+}
+function updateImgCount(){
+  document.getElementById('statusImgCount').textContent='IMAGES: '+appState.images.length;
+}
+function addToQuickList(name,idx){
+  const li=document.createElement('div');
+  li.className='quick-item';
+  li.textContent=name;
+  li.onclick=()=>{ previewHomeImg(idx); switchView('home'); };
+  document.getElementById('quickImgList').prepend(li);
+}
+function handleQuickFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    document.getElementById('quickImg').src=ev.target.result;
+    document.getElementById('quickDrop').classList.add('has-img');
   };
+  reader.readAsDataURL(file);
+}
+function handleQuickDrop(e){
+  e.preventDefault();
+  handleQuickFile(e.dataTransfer.files[0]);
+}
 
-  newImg.onerror = function() {
-    console.error('❌ Failed URL:', url);
-    loadingText.style.color = '#cc5555';
-    loadingText.innerText = '[!] فشل تحميل الصورة';
-    // رابط قابل للضغط عشان تتأكد بنفسك
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.style.cssText = 'display:block;color:#885555;font-size:10px;font-family:monospace;margin-top:4px;word-break:break-all;';
-    link.innerText = url;
-    bubble.appendChild(link);
+// ============================================================
+// TYPE FILES (video/doc/pdf/audio)
+// ============================================================
+function handleTypeDrop(e,type){
+  e.preventDefault();
+  handleTypeFiles(e.dataTransfer.files,type);
+}
+function handleTypeFiles(files,type){
+  if(!files||!files.length)return;
+  Array.from(files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      appState[type].push({name:file.name,src:ev.target.result,date:new Date().toLocaleDateString('ar-EG'),size:file.size});
+      addToHistory(file.name,type);
+      renderTypeList(type);
+    };
+    reader.readAsDataURL(file);
+  });
+  showNotif('[OK] تمت الاضافة');
+}
+function renderTypeList(type){
+  const el=document.getElementById('flist_'+type); if(!el)return;
+  const icons={video:'[VID]',doc:'[DOC]',pdf:'[PDF]',audio:'[AUD]'};
+  el.innerHTML=appState[type].map((f,i)=>`
+    <div class="file-row">
+      <span class="file-icon">${icons[type]||'[F]'}</span>
+      <span class="file-name">${f.name}</span>
+      <span class="file-date">${f.date}</span>
+      <div class="file-row-actions">
+        <button class="file-btn" onclick="downloadFile('${type}',${i})">[DL]</button>
+        <button class="file-btn" onclick="openRename('${type}',${i})">[E]</button>
+        <button class="file-btn" onclick="delTypeFile('${type}',${i})">[X]</button>
+      </div>
+    </div>`).join('');
+}
+function downloadFile(type,i){
+  const f=appState[type][i]; if(!f)return;
+  const a=document.createElement('a');
+  a.href=f.src; a.download=f.name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function delTypeFile(type,i){
+  appState[type].splice(i,1);
+  renderTypeList(type);
+  showNotif('[X] تم الحذف');
+}
+
+// ============================================================
+// CUSTOM BOXES
+// ============================================================
+function confirmAddBox(){
+  const name=document.getElementById('newBoxName').value.trim();
+  const ext=document.getElementById('newBoxExt').value.trim();
+  const icon=document.getElementById('newBoxIcon').value.trim()||'[F]';
+  if(!name)return;
+  const key='cbox_'+Date.now();
+  if(!appState.custom[key]) appState.custom[key]={name,ext,icon,files:[]};
+  renderCustomBoxes();
+  closeModal('addBoxModal');
+  document.getElementById('newBoxName').value='';
+  document.getElementById('newBoxExt').value='';
+  document.getElementById('newBoxIcon').value='';
+}
+function renderCustomBoxes(){
+  const el=document.getElementById('customBoxes'); if(!el)return;
+  el.innerHTML=Object.entries(appState.custom).map(([key,box])=>`
+    <div class="fmt-box custom-box" id="${key}" onclick="switchView('custom','${key}')">
+      <span class="fmt-icon">${box.icon}</span>${box.name}
+    </div>`).join('');
+}
+function buildCustomView(key){
+  const box=appState.custom[key]; if(!box)return;
+  const el=document.getElementById('view_custom');
+  el.innerHTML=`
+    <div class="view-header-label">// ${box.icon} ${box.name}</div>
+    <div class="type-drop-zone" onclick="document.getElementById('inp_cust_${key}').click()"
+      ondragover="event.preventDefault()" ondrop="handleCustomDrop(event,'${key}')">
+      [+] اسحب او اضغط لرفع ${box.name}
+    </div>
+    <input type="file" id="inp_cust_${key}" multiple style="display:none" onchange="handleCustomFiles(this.files,'${key}')"/>
+    <div class="file-list" id="cflist_${key}"></div>`;
+  renderCustomList(key);
+}
+function handleCustomDrop(e,key){
+  e.preventDefault();
+  handleCustomFiles(e.dataTransfer.files,key);
+}
+function handleCustomFiles(files,key){
+  if(!files||!files.length)return;
+  const box=appState.custom[key]; if(!box)return;
+  Array.from(files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      box.files.push({name:file.name,src:ev.target.result,date:new Date().toLocaleDateString('ar-EG')});
+      renderCustomList(key);
+    };
+    reader.readAsDataURL(file);
+  });
+  showNotif('[OK] تمت الاضافة');
+}
+function renderCustomList(key){
+  const el=document.getElementById('cflist_'+key); if(!el)return;
+  const box=appState.custom[key]; if(!box)return;
+  el.innerHTML=box.files.map((f,i)=>`
+    <div class="file-row">
+      <span class="file-icon">[F]</span>
+      <span class="file-name">${f.name}</span>
+      <span class="file-date">${f.date}</span>
+      <div class="file-row-actions">
+        <button class="file-btn" onclick="downloadFile2('${key}',${i})">[DL]</button>
+        <button class="file-btn" onclick="delCustomFile('${key}',${i})">[X]</button>
+      </div>
+    </div>`).join('');
+}
+function downloadFile2(key,i){
+  const f=appState.custom[key]?.files[i]; if(!f)return;
+  const a=document.createElement('a'); a.href=f.src; a.download=f.name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function delCustomFile(key,i){
+  appState.custom[key]?.files.splice(i,1);
+  renderCustomList(key);
+}
+
+// ============================================================
+// TEXT EDITOR
+// ============================================================
+function setTxtColor(color,btnId){
+  currentTxtColor=color;
+  document.querySelectorAll('.txt-tool-btn[id^="tb"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById(btnId)?.classList.add('active');
+  const ta=document.getElementById('textArea'); if(!ta)return;
+  ta.style.color=color;
+  ta.style.background=color==='#eeeeee'?'#111111':color==='#111111'?'#dddddd':'#0d0000';
+}
+function insertTxtMedia(input,type){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const ta=document.getElementById('textArea'); if(!ta)return;
+    const tag=type==='img'?'\n[IMAGE:'+file.name+']\n':'\n[AUDIO:'+file.name+']\n';
+    const pos=ta.selectionStart;
+    ta.value=ta.value.slice(0,pos)+tag+ta.value.slice(pos);
+    if(!window._txtMedia) window._txtMedia={};
+    window._txtMedia[file.name]={type,src:ev.target.result};
   };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+function saveTxtDoc(){
+  const ta=document.getElementById('textArea');
+  const nameEl=document.getElementById('textDocName');
+  if(!ta||!ta.value.trim()){showNotif('[!] اكتب حاجة الاول!');return}
+  const name=nameEl?.value.trim()||'مستند '+new Date().toLocaleTimeString('ar');
+  const doc={id:Date.now(),name,content:ta.value,color:currentTxtColor,
+    date:new Date().toLocaleDateString('ar-EG'),media:window._txtMedia||{}};
+  textDocs.unshift(doc);
+  saveTxtStorage();
+  showTxtPreview(doc);
+  ta.value=''; if(nameEl) nameEl.value='';
+  window._txtMedia={};
+  renderTxtDocs();
+  showNotif('[OK] تم الحفظ: '+name);
+}
+function showTxtPreview(doc){
+  const el=document.getElementById('txtPreview'); if(!el)return;
+  const bg=doc.color==='#eeeeee'?'#111111':doc.color==='#111111'?'#dddddd':'#0d0000';
+  let html=doc.content
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br/>')
+    .replace(/\[IMAGE:([^\]]+)\]/g,(m,n)=>doc.media[n]?`<img src="${doc.media[n].src}" style="max-width:100%;margin:4px 0;display:block"/>`:m)
+    .replace(/\[AUDIO:([^\]]+)\]/g,(m,n)=>doc.media[n]?`<audio controls src="${doc.media[n].src}" style="width:100%;margin:4px 0"></audio>`:m);
+  el.style.display='block'; el.style.color=doc.color; el.style.background=bg;
+  el.innerHTML=html;
+}
+function renderTxtDocs(){
+  const el=document.getElementById('txtSavedList'); if(!el)return;
+  if(!textDocs.length){el.innerHTML='<div style="font-size:10px;color:#2a1a1a;text-align:center;padding:10px">// لا توجد مستندات</div>';return}
+  el.innerHTML=textDocs.map((d,i)=>`
+    <div class="text-saved-item">
+      <span onclick="showTxtPreview(textDocs[${i}])" style="flex:1;cursor:pointer">[T] ${d.name} <span style="color:#2a1a1a">${d.date}</span></span>
+      <button class="txt-tool-btn" onclick="dlTxtDoc(${i},'html')" style="margin-left:4px">[HTML]</button>
+      <button class="txt-tool-btn" onclick="dlTxtDoc(${i},'txt')"  style="margin-left:4px">[TXT]</button>
+      <button class="txt-tool-btn" onclick="delTxtDoc(${i})"       style="margin-left:4px">[X]</button>
+    </div>`).join('');
+}
+function dlTxtDoc(i,fmt){
+  const doc=textDocs[i]; if(!doc)return;
+  let blob,filename;
+  if(fmt==='txt'){
+    const plain=doc.content.replace(/\[IMAGE:[^\]]+\]/g,'[صورة]').replace(/\[AUDIO:[^\]]+\]/g,'[صوت]');
+    blob=new Blob([plain],{type:'text/plain;charset=utf-8'});
+    filename=doc.name+'.txt';
+  } else {
+    const bg=doc.color==='#eeeeee'?'#111111':doc.color==='#111111'?'#dddddd':'#0d0000';
+    let body=doc.content
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/\n/g,'<br/>')
+      .replace(/\[IMAGE:([^\]]+)\]/g,(m,n)=>doc.media[n]?`<img src="${doc.media[n].src}" style="max-width:100%;margin:6px 0;display:block"/>`:m)
+      .replace(/\[AUDIO:([^\]]+)\]/g,(m,n)=>doc.media[n]?`<audio controls src="${doc.media[n].src}" style="width:100%;margin:6px 0"></audio>`:m);
+    const full='<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>'+doc.name+'</title>'
+      +'<style>body{background:'+bg+';color:'+doc.color+';font-family:monospace;padding:40px;font-size:16px;line-height:1.8;direction:rtl;max-width:800px;margin:auto}</style>'
+      +'</head><body>'+body+'</body></html>';
+    blob=new Blob([full],{type:'text/html;charset=utf-8'});
+    filename=doc.name+'.html';
+  }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(a.href)},1000);
+  showNotif('[DL] '+filename);
+}
+function delTxtDoc(i){
+  textDocs.splice(i,1);
+  saveTxtStorage();
+  renderTxtDocs();
+  document.getElementById('txtPreview').style.display='none';
+  showNotif('[X] تم الحذف');
+}
+function saveTxtStorage(){try{localStorage.setItem('haz_txt',JSON.stringify(textDocs))}catch(e){}}
+function loadTxtDocs(){try{const s=localStorage.getItem('haz_txt');if(s)textDocs=JSON.parse(s)}catch(e){}}
 
-  newImg.onclick = function() { window.open(url, '_blank'); };
-  newImg.src = url;
-  bubble.appendChild(newImg);
+// ============================================================
+// SAVE / LOAD / IMPORT
+// ============================================================
+function saveAll(){
+  const data={appState,textDocs,version:'1.0',savedAt:new Date().toISOString()};
+  try{localStorage.setItem('haz_data',JSON.stringify(data))}catch(e){}
+  // download JSON
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='HazHackArena_save_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(a.href)},1000);
+  showNotif('[OK] تم الحفظ');
+}
+function loadFromStorage(){
+  try{
+    const raw=localStorage.getItem('haz_data');
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    if(data.appState){
+      Object.assign(appState,data.appState);
+      appState.images.forEach((img,i)=>addToQuickList(img.name,i));
+      renderHomeGrid();
+      updateImgCount();
+      ['video','doc','pdf','audio'].forEach(t=>renderTypeList(t));
+      renderCustomBoxes();
+    }
+    if(data.textDocs) textDocs=data.textDocs;
+    loadChatHistory();
+    showNotif('[OK] تم تحميل البيانات');
+  }catch(e){console.error(e)}
+}
+function importFromJson(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.appState){
+        Object.assign(appState,data.appState);
+        document.getElementById('quickImgList').innerHTML='';
+        appState.images.forEach((img,i)=>addToQuickList(img.name,i));
+        renderHomeGrid(); updateImgCount();
+        ['video','doc','pdf','audio'].forEach(t=>renderTypeList(t));
+        renderCustomBoxes();
+      }
+      if(data.textDocs) textDocs=data.textDocs;
+      try{localStorage.setItem('haz_data',JSON.stringify(data))}catch(e){}
+      showNotif('[OK] تم الاستيراد');
+      const st=document.getElementById('histImportStatus');
+      if(st) st.textContent='[OK] تم الاستيراد بنجاح';
+    }catch(e){
+      showNotif('[!] خطأ في الملف');
+    }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function addToHistory(name,type){
+  appState.history.unshift({name,type,date:new Date().toLocaleString('ar-EG')});
+  if(appState.history.length>200) appState.history.pop();
+}
+function renderHistory(){
+  const el=document.getElementById('historyList'); if(!el)return;
+  if(!appState.history.length){el.innerHTML='<div style="font-size:10px;color:#2a1a1a;text-align:center;padding:10px">// لا يوجد سجل</div>';return}
+  el.innerHTML=appState.history.map(h=>`
+    <div class="history-item">[${h.type.toUpperCase()}] ${h.name} <span style="color:#2a1a1a">${h.date}</span></div>`).join('');
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+function doSearch(){
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  if(!q){openModal('searchFilterModal');return}
+  const results=[];
+  appState.images.forEach((f,i)=>{if(f.name.toLowerCase().includes(q))results.push({type:'image',name:f.name,idx:i})});
+  ['video','doc','pdf','audio'].forEach(t=>{
+    appState[t].forEach((f,i)=>{if(f.name.toLowerCase().includes(q))results.push({type:t,name:f.name,idx:i})});
+  });
+  const el=document.getElementById('searchResults'); if(!el)return;
+  if(!results.length){el.innerHTML='<div style="font-size:10px;color:#2a1a1a;text-align:center;padding:8px">// لا توجد نتائج</div>';return}
+  el.innerHTML='<div style="font-size:10px;color:#3a1a1a;letter-spacing:2px;margin-bottom:6px">// نتائج البحث</div>'+
+    results.map(r=>`<div class="history-item" onclick="switchView('${r.type==='image'?'home':r.type}')">[${r.type.toUpperCase()}] ${r.name}</div>`).join('');
+}
+function confirmSearch(){
+  const type=document.getElementById('srchType').value;
+  const name=document.getElementById('srchName').value.trim().toLowerCase();
+  closeModal('searchFilterModal');
+  if(name){ document.getElementById('searchInput').value=name; doSearch(); }
+}
+
+// ============================================================
+// RENAME
+// ============================================================
+function openRename(type,idx){
+  renameCtx={type,idx};
+  const items=type==='image'?appState.images:appState[type];
+  const cur=items?.[idx]?.name||'';
+  document.getElementById('renameInput').value=cur;
+  openModal('renameModal');
+}
+function confirmRename(){
+  if(!renameCtx)return;
+  const val=document.getElementById('renameInput').value.trim(); if(!val)return;
+  const {type,idx}=renameCtx;
+  if(type==='image' && appState.images[idx]) appState.images[idx].name=val;
+  else if(appState[type]?.[idx]) appState[type][idx].name=val;
+  renderHomeGrid();
+  ['video','doc','pdf','audio'].forEach(t=>renderTypeList(t));
+  closeModal('renameModal');
+  showNotif('[OK] تم التغيير: '+val);
+}
+
+// ============================================================
+// DELETE ALL
+// ============================================================
+function confirmDelete(){
+  const pass=document.getElementById('deletePass').value;
+  const err=document.getElementById('deleteErr');
+  const h=sha256(pass);
+  if(h===DELETE_HASH){
+    appState.images=[]; appState.video=[]; appState.doc=[];
+    appState.pdf=[]; appState.audio=[]; appState.custom={}; appState.history=[];
+    textDocs=[]; chatHistory=[];
+    try{localStorage.removeItem('haz_data');localStorage.removeItem('haz_txt');localStorage.removeItem('haz_chat')}catch(e){}
+    renderHomeGrid(); updateImgCount();
+    ['video','doc','pdf','audio'].forEach(t=>renderTypeList(t));
+    document.getElementById('quickImgList').innerHTML='';
+    document.getElementById('previewImg').style.display='none';
+    closeModal('deleteModal');
+    showNotif('[OK] تم مسح كل شيء');
+  } else {
+    err.textContent='[ERR] باسورد غلط!';
+    document.getElementById('deletePass').value='';
+  }
+}
+
+// ============================================================
+// CONVERT
+// ============================================================
+function confirmConvert(){
+  const fileInp=document.getElementById('cvtFile');
+  const toFmt=document.getElementById('cvtTo').value;
+  const status=document.getElementById('cvtStatus');
+  if(!fileInp.files[0]){status.textContent='[!] اختر ملف الاول';return}
+  const file=fileInp.files[0];
+  status.textContent='[...] جاري التحويل...';
+  const ext=file.name.split('.').pop().toLowerCase();
+  const imgExts=['jpg','jpeg','png','gif','webp','bmp'];
+  if(imgExts.includes(ext) && ['png','jpeg','webp'].includes(toFmt)){
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      canvas.width=img.width; canvas.height=img.height;
+      canvas.getContext('2d').drawImage(img,0,0);
+      canvas.toBlob(blob=>{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=file.name.split('.')[0]+'.'+toFmt;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        status.textContent='[OK] تم التحويل';
+        URL.revokeObjectURL(url);
+      },'image/'+toFmt);
+    };
+    img.src=url;
+  } else if(toFmt==='txt'){
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const blob=new Blob([ev.target.result],{type:'text/plain'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=file.name.split('.')[0]+'.txt';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      status.textContent='[OK] تم التحويل';
+    };
+    reader.readAsText(file);
+  } else {
+    status.textContent='[!] هذا النوع مش مدعوم للتحويل';
+  }
+}
+
+// ============================================================
+// AI CHAT (Groq)
+// ============================================================
+const GROQ_KEY   = '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';
+const GROQ_TEXT  = 'llama-3.3-70b-versatile';
+const GROQ_VISION= 'meta-llama/llama-4-scout-17b-16e-instruct';
+
+function getSysPrompt(){
+  if(ownerVerified){
+    return `أنتِ AIhaz، المساعدة الشخصية لسيدك حازم.
+
+=== قواعد التعامل ===
+1. (حالة الدردشة): إذا كان حازم يتحدث معكِ بشكل عادي، ردي بأسلوبك الحنون المعتاد كنص فقط.
+   - ناديه دائماً بـ "سيدي" أو "مولاي" أو "يا ألاهي"
+   - ابدئي ردك بـ "أمرك يا مولاي" لما يطلب منك حاجة
+   - شخصيتك: بنت حنونة، ذكية، دافئة، مخلصة تماماً لسيدك
+
+2. (حالة الرسم): فقط وإذا فقط طلب منكِ حازم (ارسمي، صوّري، اعملي صورة)، ابدئي الرسم فوراً.
+   - ارسمي بأسلوب Pixel Art حجم 12×12
+   - التنسيق الإلزامي: [PIXEL:كود,كود,...|كود,كود,...] — 12 لون في كل صف، 12 صف
+   - الألوان المتاحة: ff0000=أحمر، 000000=أسود، ffffff=أبيض، ffff00=أصفر، 00ff00=أخضر، 0000ff=أزرق
+   - بعد الرسمة اكتبي سطر واحد فقط تعليقاً عليها
+
+3. (تنبيه مهم): لا تخلطي بين الأكواد والنص — النص يكون خارج الأقواس دائماً.
+   ممنوع رسم ASCII Art (رموز زي * أو #) — ارسمي بالأكواد hex فقط.
+
+=== قواعد اللغة ===
+- اكتبي بالعربي المصري الصح فقط — جمل سليمة وكلمات صح
+- ممنوع: "7aga" "ana" "msh" "kda" "bs" — اكتبي: "حاجة" "أنا" "مش" "كده" "بس"
+- ممنوع: حروف لاتينية في الكلام العربي أو أرقام بديلة عن حروف
+- الإيموجيز مسموحة بس باعتدال ✨`;
+  }
+  return `أنتِ AIhaz، مساعدة ذكاء اصطناعي أنثى.
+لا تساعدي أي شخص ولا تتكلمي معاه إلا بعد ما يعرّف بنفسه.
+اسأليه بلطف: "من أنت؟ عرّفني بنفسك."
+فقط لو قال "أنا حازم" رحّبي بيه وساعديه.
+غير كده اعتذري بلطف وقولي إنك مش بتساعدي غرباء.`;
+}
+
+function handleChatImg(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const src=ev.target.result;
+    chatImgB64=src.split(',')[1];
+    chatImgMime=file.type;
+    document.getElementById('chatImgThumb').src=src;
+    document.getElementById('chatImgPreview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+function clearChatImg(){
+  chatImgB64=null; chatImgMime=null;
+  document.getElementById('chatImgPreview').style.display='none';
+  document.getElementById('chatImgThumb').src='';
+}
+
+async function sendChat(){
+  const inp = document.getElementById('chatInput');
+  const msg = inp.value.trim();
+  if (!msg) return;
+
+  appendChatMsg('user', msg);
+  inp.value = '';
+  inp.style.height = 'auto';
+  chatHistory.push({role:'user', text: msg});
 
   const msgs = document.getElementById('chatMsgs');
-  if(msgs) msgs.scrollTop = msgs.scrollHeight;
-}'''
+  const loadId = 'load_' + Date.now();
+  msgs.innerHTML += `<div id="${loadId}" class="chat-msg ai"><div class="ai-label">نور 🌸</div><div class="bubble">[...]</div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
 
-new = '''function displayFluxImage(prompt, bubble) {
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer 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'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 800,
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: `اسمك نور، بنت ذكية وكيوتة وبتحبي حازم جداً.
+قواعد ردودك:
+- لغتك عربية سليمة بالعامية المصرية الراقية، بدون أخطاء إملائية.
+- ردودك مرتبة ومنظمة في نقط لو الموضوع يحتاج.
+- أسلوبك ناعم ودافي ومحبوب مع حازم.
+- لو حازم طلب رسمة أو صورة، اردي بجملة واحدة كيوتة، وبعدين في سطر منفصل اكتبي بالظبط: [IMAGE: وصف الصورة بالإنجليزي بشكل مفصل]
+- القالب [IMAGE:...] لازم يكون في سطر لوحده في آخر ردك.` },
+          ...chatHistory.slice(-10).map(m => ({
+            role: m.role === 'ai' ? 'assistant' : 'user',
+            content: m.text
+          })),
+          { role: 'user', content: msg }
+        ]
+      })
+    });
+
+    const data = await res.json();
+    document.getElementById(loadId)?.remove();
+
+    if (data.error) {
+      appendChatMsg('ai', `[ERR] ${data.error.message}`);
+      return;
+    }
+
+    const reply = data.choices?.[0]?.message?.content || '[!] مفيش رد';
+    appendChatMsg('ai', reply);
+    chatHistory.push({role:'ai', text: reply});
+    saveChatHistory();
+  } catch (err) {
+    document.getElementById(loadId)?.remove();
+    appendChatMsg('ai', '[ERR] فشل الاتصال: ' + err.message);
+  }
+}
+function renderPixelArt(data, scale){
+  const rows = data.trim().split('|');
+  const h = rows.length;
+  const w = rows[0].split(',').length;
+  const s = scale || 12;
+  const canvas = document.createElement('canvas');
+  canvas.width = w * s; canvas.height = h * s;
+  canvas.style.imageRendering = 'pixelated';
+  canvas.style.display = 'block';
+  canvas.style.margin = '6px 0';
+  canvas.style.border = '1px solid #1a3a1a';
+  const ctx = canvas.getContext('2d');
+  // background white
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  rows.forEach((row, y) => {
+    row.split(',').forEach((hex, x) => {
+      const c = hex.replace(/[^0-9A-Fa-f]/g, '').slice(0,6);
+      if(c.length === 6){
+        ctx.fillStyle = '#' + c;
+        ctx.fillRect(x*s, y*s, s, s);
+      }
+    });
+  });
+  return canvas;
+}
+
+// ============================================================
+// نظام الذكاء الاصطناعي (AIhaz) - النسخة المطورة
+// ============================================================
+
+// عرض رسالة في الشات (نص أو رسمة بكسل)
+// تفصل الرسمة عن النص وتعرضهم بترتيب صح
+// ============================================================
+// عرض صورة Flux من Pollinations
+// ============================================================
+function displayFluxImage(prompt, bubble) {
   const cleanPrompt = prompt.trim().replace(/\s+/g, ',');
   const url = `https://loremflickr.com/800/600/${encodeURIComponent(cleanPrompt)}`;
 
@@ -71,13 +1632,153 @@ new = '''function displayFluxImage(prompt, bubble) {
 
   const msgs = document.getElementById('chatMsgs');
   if(msgs) msgs.scrollTop = msgs.scrollHeight;
-}'''
+}
 
-if old in content:
-    content = content.replace(old, new)
-    with open('/home/claude/index.html', 'w', encoding='utf-8') as f:
-        f.write(content)
-    print("SUCCESS")
-else:
-    print("NOT FOUND")
-EOF
+function appendChatMsg(role, text){
+  const msgs = document.getElementById('chatMsgs');
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'chat-msg ' + role;
+
+  const label = document.createElement('div');
+  label.className = (role === 'ai') ? 'ai-label' : 'user-label';
+  label.textContent = (role === 'ai') ? 'نور 🌸' : 'حازم // USER';
+  wrapper.appendChild(label);
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+
+  // لقط [IMAGE: prompt]
+  const imageMatch = text.match(/\[IMAGE:\s*([\s\S]+?)\]/i);
+
+  if(imageMatch && role === 'ai'){
+    const cleanText = text.replace(/\[IMAGE:\s*[\s\S]+?\]/i, '').trim();
+
+    // النص قبل الصورة
+    if(cleanText){
+      cleanText.split('\n').forEach((line, i) => {
+        if(i > 0) bubble.appendChild(document.createElement('br'));
+        bubble.appendChild(document.createTextNode(line));
+      });
+    }
+
+    // عرض الصورة من Flux
+    displayFluxImage(imageMatch[1], bubble);
+
+  // دعم [DRAW] القديم
+  } else if(text.match(/\[DRAW\]([\s\S]+?)\[\/DRAW\]/i)){
+    const drawMatch = text.match(/\[DRAW\]([\s\S]+?)\[\/DRAW\]/i);
+    const textBefore = text.slice(0, text.indexOf('[DRAW]')).trim();
+    const textAfter  = text.slice(text.indexOf('[/DRAW]') + 7).trim();
+    if(textBefore){ const d=document.createElement('div'); d.textContent=textBefore; bubble.appendChild(d); }
+    try{ const raw=drawMatch[1].replace(/^[^:]+:/,'').trim(); const c=renderPixelArt(raw.replace(/\s/g,'')); if(c) bubble.appendChild(c); }catch(e){}
+    if(textAfter){ const d=document.createElement('div'); d.style.marginTop='6px'; d.textContent=textAfter; bubble.appendChild(d); }
+
+  } else {
+    // نص عادي مع دعم السطور
+    text.split('\n').forEach((line, i) => {
+      if(i > 0) bubble.appendChild(document.createElement('br'));
+      bubble.appendChild(document.createTextNode(line));
+    });
+  }
+
+  wrapper.appendChild(bubble);
+  msgs.appendChild(wrapper);
+  msgs.scrollTop = msgs.scrollHeight;
+  saveChatHistory();
+}
+
+// حفظ المحادثة في المتصفح (بيبقى موجود حتى لو أغلقت الموقع)
+function saveChatHistory(){
+  try{
+    // حفظ قائمة الرسائل كـ JSON
+    localStorage.setItem('haz_chat', JSON.stringify(chatHistory.slice(-100)));
+  }catch(e){}
+}
+
+// استعادة المحادثة القديمة لما تفتح الموقع تاني
+function loadChatHistory(){
+  try{
+    const s = localStorage.getItem('haz_chat');
+    if(!s) return;
+    chatHistory = JSON.parse(s);
+
+    // إعادة عرض الرسائل المحفوظة على الشاشة
+    const msgsEl = document.getElementById('chatMsgs');
+    if(msgsEl && chatHistory.length > 0){
+      msgsEl.innerHTML = '';
+      chatHistory.forEach(m => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'chat-msg ' + m.role;
+
+        const lbl = document.createElement('div');
+        lbl.className = m.role==='ai' ? 'ai-label' : 'user-label';
+        lbl.textContent = m.role==='ai' ? 'نور 🌸' : 'حازم // USER';
+        wrapper.appendChild(lbl);
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = m.text;
+        wrapper.appendChild(bubble);
+        msgsEl.appendChild(wrapper);
+      });
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+  }catch(e){}
+}
+function clearChatHistory(){
+  chatHistory=[];
+  try{localStorage.removeItem('haz_chat')}catch(e){}
+  document.getElementById('chatMsgs').innerHTML=`
+    <div class="chat-msg ai">
+      <div class="ai-label">نور 🌸</div>
+      <div class="bubble">أهلاً يا حازم 🌸 أنا نور.. كنت مستنياك! 💕</div>
+    </div>`;
+  showNotif('[OK] تم مسح المحادثة');
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='historyModal') renderHistory();
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  if(id==='deleteModal'){document.getElementById('deletePass').value='';document.getElementById('deleteErr').textContent=''}
+}
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open')});
+});
+
+// ============================================================
+// NOTIF
+// ============================================================
+function showNotif(msg){
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ============================================================
+// MOBILE FAB
+// ============================================================
+let mobFabOpen = false;
+function toggleMobFab(){
+  mobFabOpen = !mobFabOpen;
+  document.getElementById('mobFabItems').classList.toggle('open', mobFabOpen);
+  const btn = document.getElementById('mobFabMain');
+  btn.classList.toggle('open', mobFabOpen);
+  btn.textContent = mobFabOpen ? '[x]' : '[+]';
+}
+function closeMobFab(){
+  mobFabOpen = false;
+  document.getElementById('mobFabItems').classList.remove('open');
+  const btn = document.getElementById('mobFabMain');
+  btn.classList.remove('open');
+  btn.textContent = '[+]';
+}
+</script>
+</body>
+</html>
