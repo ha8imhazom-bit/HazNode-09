@@ -1607,8 +1607,10 @@ function renderPixelArt(data, scale){
 // عرض صورة Flux من Pollinations
 // ============================================================
 function displayFluxImage(prompt, bubble) {
-  const cleanPrompt = prompt.trim().replace(/\s+/g, ',');
-  const url = `https://loremflickr.com/800/600/${encodeURIComponent(cleanPrompt)}`;
+  const cleanPrompt = encodeURIComponent(prompt.trim());
+  // Picsum: صور عشوائية حقيقية، CORS مفتوح 100%، مش بيتوقف
+  const seed = Math.floor(Math.random() * 1000);
+  const url = `https://picsum.photos/seed/${seed}/800/600`;
 
   const newImg = document.createElement('img');
   newImg.alt = prompt;
@@ -1623,7 +1625,7 @@ function displayFluxImage(prompt, bubble) {
   newImg.onerror = function() {
     console.error('❌ Failed URL:', url);
     this.onerror = null;
-    this.src = 'https://placehold.co/800x600/1a0000/cc5555?text=Error+Loading+Image';
+    this.src = 'https://placehold.co/800x600/1a0000/cc5555?text=Error';
   };
 
   newImg.onclick = function() { window.open(url, '_blank'); };
