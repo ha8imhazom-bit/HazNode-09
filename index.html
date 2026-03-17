@@ -764,11 +764,17 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
           <div class="bubble">أهلاً يا حازم 🌸 أنا نور.. كنت مستنياك! 💕</div>
         </div>
       </div>
+      <!-- Image Preview (تظهر لما المستخدم يرفع صورة) -->
+      <div id="chatImgPreviewBar" style="display:none;align-items:center;gap:8px;padding:6px 8px;background:#000a00;border:1px solid #0a3a0a;margin-bottom:6px;">
+        <img id="chatImgThumbBar" style="width:40px;height:40px;object-fit:cover;border:1px solid #1a5a1a;border-radius:2px;"/>
+        <span style="font-size:10px;color:#55aa55;flex:1" id="chatImgNameBar">// صورة محملة</span>
+        <button onclick="clearPendingImg()" style="font-size:10px;background:#0a0000;color:#cc5555;border:1px solid #3a0000;padding:2px 8px;cursor:pointer;font-family:monospace">[X] إزالة</button>
+      </div>
       <div class="chat-input-row">
         <button class="chat-send" onclick="sendChat()">[&gt;] ارسال</button>
-        <button class="chat-send" onclick="document.getElementById('chatImgInput').click()" style="background:#0a0000;border-color:#3a0000;font-size:11px;" title="ارسل صورة">📷</button>
-        <input type="file" id="chatImgInput" accept="image/*" style="display:none" onchange="sendImageToAI(this)">
-        <textarea id="chatInput" placeholder="// اكتب هنا..." rows="1"
+        <button class="chat-send" onclick="document.getElementById('chatImgInput').click()" style="background:#0a0000;border-color:#3a0000;font-size:11px;" title="ارفع صورة">📷</button>
+        <input type="file" id="chatImgInput" accept="image/*" style="display:none" onchange="handlePendingImg(this)">
+        <textarea id="chatInput" placeholder="// اكتب طلبك... (مثال: جيبلي كلب)" rows="1"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
           oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
           style="flex:1;background:#000d00;border:1px solid #0a2a0a;color:#77cc77;padding:6px 8px;font-family:'Courier Prime',monospace;font-size:12px;outline:none;resize:none;overflow-y:auto;line-height:1.4"></textarea>
@@ -1493,131 +1499,94 @@ function getSysPrompt(){
 غير كده اعتذري بلطف وقولي إنك مش بتساعدي غرباء.`;
 }
 
-function handleChatImg(input){
-  const file=input.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const src=ev.target.result;
-    chatImgB64=src.split(',')[1];
-    chatImgMime=file.type;
-    document.getElementById('chatImgThumb').src=src;
-    document.getElementById('chatImgPreview').style.display='block';
-  };
-  reader.readAsDataURL(file);
-  input.value='';
-}
-function clearChatImg(){
-  chatImgB64=null; chatImgMime=null;
-  document.getElementById('chatImgPreview').style.display='none';
-  document.getElementById('chatImgThumb').src='';
-}
-
 // ============================================================
-// تحليل الصورة بـ Claude + البحث عن شبيهها
+// نظام الصورة المعلقة — المستخدم يرفع الصورة ويكتب طلبه
 // ============================================================
-let lastImageDescription = null;
+let pendingImgB64  = null;
+let pendingImgMime = null;
+let pendingImgSrc  = null;
 
-async function sendImageToAI(input) {
+function handlePendingImg(input) {
   const file = input.files[0];
   if (!file) return;
-  input.value = '';
-
   const reader = new FileReader();
-  reader.onload = async function(e) {
-    const base64 = e.target.result.split(',')[1];
-    const mimeType = file.type;
-
-    // اعرض الصورة من جهة المستخدم
-    const msgs = document.getElementById('chatMsgs');
-    const userWrap = document.createElement('div');
-    userWrap.className = 'chat-msg user';
-    userWrap.innerHTML = `<div class="user-label">حازم // USER</div><div class="bubble"><img src="${e.target.result}" style="max-width:200px;border-radius:4px;border:1px solid #3a0000;"></div>`;
-    msgs.appendChild(userWrap);
-    msgs.scrollTop = msgs.scrollHeight;
-
-    // رسالة تحميل
-    const loadId = 'load_' + Date.now();
-    msgs.innerHTML += `<div id="${loadId}" class="chat-msg ai"><div class="ai-label">نور 🌸</div><div class="bubble">⏳ بشوف الصورة دي...</div></div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-
-    try {
-      // Groq يدعم vision بـ llama
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + GROQ_KEY
-        },
-        body: JSON.stringify({
-          model: GROQ_VISION,
-          max_tokens: 500,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
-              { type: 'text', text: 'وصف الصورة دي بالعربي بشكل كيوت وبسيط في جملتين بالكتير. وفي الآخر قول بالإنجليزي في سطر لوحده: KEYWORDS: كلمة1, كلمة2, كلمة3 (أهم 3 كلمات لو حد دور على صورة شبيهها)' }
-            ]
-          }]
-        })
-      });
-
-      const data = await res.json();
-      document.getElementById(loadId)?.remove();
-
-      if (!res.ok || data.error) {
-        const errMsg = data?.error?.message || `HTTP ${res.status}`;
-        appendChatMsg('ai', `[ERR] مش قادرة أشوف الصورة: ${errMsg}`);
-        return;
-      }
-
-      const reply = data.choices?.[0]?.message?.content || '[!] مش قادرة أشوف الصورة';
-      lastImageDescription = reply.match(/KEYWORDS:\s*(.+)/i)?.[1] || null;
-
-      appendChatMsg('ai', reply + '\n\nلو عايز تشوف صور شبيهها قولي "جيبي شبيهها" 🔍');
-      chatHistory.push({role:'ai', text: reply});
-      saveChatHistory();
-
-    } catch(err) {
-      document.getElementById(loadId)?.remove();
-      appendChatMsg('ai', '[ERR] فشل تحليل الصورة: ' + err.message);
-    }
+  reader.onload = function(e) {
+    pendingImgSrc  = e.target.result;
+    pendingImgB64  = e.target.result.split(',')[1];
+    pendingImgMime = file.type;
+    document.getElementById('chatImgThumbBar').src = e.target.result;
+    document.getElementById('chatImgNameBar').textContent = '📷 ' + file.name;
+    document.getElementById('chatImgPreviewBar').style.display = 'flex';
+    const inp = document.getElementById('chatInput');
+    inp.focus();
+    inp.placeholder = '// اكتب طلبك مع الصورة... (مثال: جيبلي كلب)';
   };
   reader.readAsDataURL(file);
+  input.value = '';
 }
+
+function clearPendingImg() {
+  pendingImgB64 = null; pendingImgMime = null; pendingImgSrc = null;
+  document.getElementById('chatImgPreviewBar').style.display = 'none';
+  document.getElementById('chatImgThumbBar').src = '';
+  document.getElementById('chatInput').placeholder = '// اكتب هنا...';
+}
+
+// للتوافق مع الكود القديم
+function handleChatImg(input) { handlePendingImg(input); }
+function sendImageToAI(input) { handlePendingImg(input); }
 
 async function sendChat(){
   const inp = document.getElementById('chatInput');
   const msg = inp.value.trim();
-  if (!msg) return;
 
-  appendChatMsg('user', msg);
+  // لازم يكون في رسالة أو صورة
+  if (!msg && !pendingImgB64) return;
+
+  const finalMsg = msg || '// وصف الصورة دي';
+
+  // عرض رسالة المستخدم - لو في صورة اعرضها مع النص
+  if (pendingImgB64) {
+    const msgs = document.getElementById('chatMsgs');
+    const userWrap = document.createElement('div');
+    userWrap.className = 'chat-msg user';
+    userWrap.innerHTML = `
+      <div class="user-label">حازم // USER</div>
+      <div class="bubble">
+        <img src="${pendingImgSrc}" style="max-width:180px;border-radius:4px;border:1px solid #3a0000;display:block;margin-bottom:6px;">
+        ${finalMsg ? `<span>${finalMsg}</span>` : ''}
+      </div>`;
+    msgs.appendChild(userWrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  } else {
+    appendChatMsg('user', finalMsg);
+  }
+
   inp.value = '';
   inp.style.height = 'auto';
-  chatHistory.push({role:'user', text: msg});
-
-  // لو طلب شبيه الصورة
-  if ((msg.includes('شبيهها') || msg.includes('شبيها') || msg.includes('شبيه')) && lastImageDescription) {
-    const keywords = lastImageDescription;
-    const bubble = document.createElement('div');
-    const wrap = document.createElement('div');
-    wrap.className = 'chat-msg ai';
-    wrap.innerHTML = '<div class="ai-label">نور 🌸</div>';
-    wrap.appendChild(bubble);
-    bubble.className = 'bubble';
-    bubble.textContent = '🔍 بدور على صور شبيهها...';
-    document.getElementById('chatMsgs').appendChild(wrap);
-    displayFluxImage(keywords, bubble);
-    return;
-  }
+  chatHistory.push({role:'user', text: finalMsg});
 
   const msgs = document.getElementById('chatMsgs');
   const loadId = 'load_' + Date.now();
-  msgs.innerHTML += `<div id="${loadId}" class="chat-msg ai"><div class="ai-label">نور 🌸</div><div class="bubble">[...]</div></div>`;
+  msgs.innerHTML += `<div id="${loadId}" class="chat-msg ai"><div class="ai-label">نور 🌸</div><div class="bubble">⏳ ${pendingImgB64 ? 'بشوف الصورة...' : '[...]'}</div></div>`;
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
-    // بناء قائمة الرسائل بدون آخر رسالة المستخدم (لأننا بنبعتها صح في الآخر)
-    const historyToSend = chatHistory.slice(-20, -1); // آخر 20 رسالة بدون آخر واحدة
+    // بناء محتوى رسالة المستخدم
+    let userContent;
+    if (pendingImgB64) {
+      // رسالة vision: صورة + طلب المستخدم
+      userContent = [
+        { type: 'image_url', image_url: { url: `data:${pendingImgMime};base64,${pendingImgB64}` } },
+        { type: 'text', text: finalMsg + `\n\nتعليمات: لو الطلب يحتاج صورة خارجية (مثل "جيبلي كلب"), اكتبي في السطر الأخير: [IMAGE: وصف إنجليزي مفصل للصورة المطلوبة]\nلو مجرد سؤال عن الصورة اللي أمامك، أجيبي عليه بشكل طبيعي.` }
+      ];
+    } else {
+      userContent = finalMsg;
+    }
+
+    const model = pendingImgB64 ? GROQ_VISION : GROQ_TEXT;
+
+    const historyToSend = chatHistory.slice(-20, -1);
 
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -1626,7 +1595,7 @@ async function sendChat(){
         'Authorization': 'Bearer ' + GROQ_KEY
       },
       body: JSON.stringify({
-        model: GROQ_TEXT,
+        model: model,
         max_tokens: 800,
         temperature: 0.7,
         messages: [
@@ -1635,13 +1604,13 @@ async function sendChat(){
 - لغتك عربية سليمة بالعامية المصرية الراقية، بدون أخطاء إملائية.
 - ردودك مرتبة ومنظمة في نقط لو الموضوع يحتاج.
 - أسلوبك ناعم ودافي ومحبوب مع حازم.
-- لو حازم طلب رسمة أو صورة، اردي بجملة واحدة كيوتة، وبعدين في سطر منفصل اكتبي بالظبط: [IMAGE: وصف الصورة بالإنجليزي بشكل مفصل]
+- لو حازم طلب رسمة أو صورة أو قال "جيبلي X"، اردي بجملة واحدة كيوتة، وبعدين في سطر منفصل اكتبي بالظبط: [IMAGE: وصف الصورة المطلوبة بالإنجليزي بشكل مفصل]
 - القالب [IMAGE:...] لازم يكون في سطر لوحده في آخر ردك.` },
           ...historyToSend.map(m => ({
             role: m.role === 'ai' ? 'assistant' : 'user',
             content: m.text
           })),
-          { role: 'user', content: msg }
+          { role: 'user', content: userContent }
         ]
       })
     });
@@ -1650,8 +1619,8 @@ async function sendChat(){
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      const errMsg = errData?.error?.message || `HTTP ${res.status}`;
-      appendChatMsg('ai', `[ERR] خطأ من الـ API: ${errMsg}`);
+      appendChatMsg('ai', `[ERR] خطأ من الـ API: ${errData?.error?.message || 'HTTP ' + res.status}`);
+      clearPendingImg();
       return;
     }
 
@@ -1659,22 +1628,28 @@ async function sendChat(){
 
     if (data.error) {
       appendChatMsg('ai', `[ERR] ${data.error.message}`);
+      clearPendingImg();
       return;
     }
 
     const reply = data.choices?.[0]?.message?.content;
     if (!reply) {
       appendChatMsg('ai', '[!] مفيش رد من الـ AI، جرب تاني.');
+      clearPendingImg();
       return;
     }
 
     appendChatMsg('ai', reply);
     chatHistory.push({role:'ai', text: reply});
     saveChatHistory();
+
   } catch (err) {
     document.getElementById(loadId)?.remove();
     appendChatMsg('ai', '[ERR] فشل الاتصال: ' + (err.message || 'تأكد من الإنترنت'));
   }
+
+  // امسح الصورة المعلقة بعد الإرسال
+  clearPendingImg();
 }
 function renderPixelArt(data, scale){
   const rows = data.trim().split('|');
