@@ -1457,7 +1457,7 @@ function confirmConvert(){
 // ============================================================
 // AI CHAT (Groq)
 // ============================================================
-const GROQ_KEY   = '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';
+const GROQ_KEY   = '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';
 const GROQ_TEXT  = 'llama-3.3-70b-versatile';
 const GROQ_VISION= 'meta-llama/llama-4-scout-17b-16e-instruct';
 
@@ -1546,7 +1546,7 @@ async function sendImageToAI(input) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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'
+          'Authorization': 'Bearer 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'
         },
         body: JSON.stringify({
           model: 'meta-llama/llama-4-scout-17b-16e-instruct',
@@ -1614,7 +1614,7 @@ async function sendChat(){
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer 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'
+        'Authorization': 'Bearer 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'
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
