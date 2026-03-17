@@ -1546,10 +1546,10 @@ async function sendImageToAI(input) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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'
+          'Authorization': 'Bearer ' + GROQ_KEY
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          model: GROQ_VISION,
           max_tokens: 500,
           messages: [{
             role: 'user',
@@ -1563,6 +1563,12 @@ async function sendImageToAI(input) {
 
       const data = await res.json();
       document.getElementById(loadId)?.remove();
+
+      if (!res.ok || data.error) {
+        const errMsg = data?.error?.message || `HTTP ${res.status}`;
+        appendChatMsg('ai', `[ERR] مش قادرة أشوف الصورة: ${errMsg}`);
+        return;
+      }
 
       const reply = data.choices?.[0]?.message?.content || '[!] مش قادرة أشوف الصورة';
       lastImageDescription = reply.match(/KEYWORDS:\s*(.+)/i)?.[1] || null;
@@ -1610,14 +1616,17 @@ async function sendChat(){
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
+    // بناء قائمة الرسائل بدون آخر رسالة المستخدم (لأننا بنبعتها صح في الآخر)
+    const historyToSend = chatHistory.slice(-20, -1); // آخر 20 رسالة بدون آخر واحدة
+
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer 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'
+        'Authorization': 'Bearer ' + GROQ_KEY
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: GROQ_TEXT,
         max_tokens: 800,
         temperature: 0.7,
         messages: [
@@ -1628,7 +1637,7 @@ async function sendChat(){
 - أسلوبك ناعم ودافي ومحبوب مع حازم.
 - لو حازم طلب رسمة أو صورة، اردي بجملة واحدة كيوتة، وبعدين في سطر منفصل اكتبي بالظبط: [IMAGE: وصف الصورة بالإنجليزي بشكل مفصل]
 - القالب [IMAGE:...] لازم يكون في سطر لوحده في آخر ردك.` },
-          ...chatHistory.slice(-10).map(m => ({
+          ...historyToSend.map(m => ({
             role: m.role === 'ai' ? 'assistant' : 'user',
             content: m.text
           })),
@@ -1637,21 +1646,34 @@ async function sendChat(){
       })
     });
 
-    const data = await res.json();
     document.getElementById(loadId)?.remove();
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const errMsg = errData?.error?.message || `HTTP ${res.status}`;
+      appendChatMsg('ai', `[ERR] خطأ من الـ API: ${errMsg}`);
+      return;
+    }
+
+    const data = await res.json();
 
     if (data.error) {
       appendChatMsg('ai', `[ERR] ${data.error.message}`);
       return;
     }
 
-    const reply = data.choices?.[0]?.message?.content || '[!] مفيش رد';
+    const reply = data.choices?.[0]?.message?.content;
+    if (!reply) {
+      appendChatMsg('ai', '[!] مفيش رد من الـ AI، جرب تاني.');
+      return;
+    }
+
     appendChatMsg('ai', reply);
     chatHistory.push({role:'ai', text: reply});
     saveChatHistory();
   } catch (err) {
     document.getElementById(loadId)?.remove();
-    appendChatMsg('ai', '[ERR] فشل الاتصال: ' + err.message);
+    appendChatMsg('ai', '[ERR] فشل الاتصال: ' + (err.message || 'تأكد من الإنترنت'));
   }
 }
 function renderPixelArt(data, scale){
