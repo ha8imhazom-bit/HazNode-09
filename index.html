@@ -1522,9 +1522,6 @@ async function sendImageToAI(input) {
   if (!file) return;
   input.value = '';
 
-  const CLAUDE_KEY = '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';
-
-  // اعرض الصورة في الشات
   const reader = new FileReader();
   reader.onload = async function(e) {
     const base64 = e.target.result.split(',')[1];
@@ -1544,21 +1541,20 @@ async function sendImageToAI(input) {
     msgs.scrollTop = msgs.scrollHeight;
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      // Groq يدعم vision بـ llama
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
+          'Authorization': 'Bearer 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'
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
           max_tokens: 500,
           messages: [{
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+              { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
               { type: 'text', text: 'وصف الصورة دي بالعربي بشكل كيوت وبسيط في جملتين بالكتير. وفي الآخر قول بالإنجليزي في سطر لوحده: KEYWORDS: كلمة1, كلمة2, كلمة3 (أهم 3 كلمات لو حد دور على صورة شبيهها)' }
             ]
           }]
@@ -1568,7 +1564,7 @@ async function sendImageToAI(input) {
       const data = await res.json();
       document.getElementById(loadId)?.remove();
 
-      const reply = data.content?.[0]?.text || '[!] مش قادرة أشوف الصورة';
+      const reply = data.choices?.[0]?.message?.content || '[!] مش قادرة أشوف الصورة';
       lastImageDescription = reply.match(/KEYWORDS:\s*(.+)/i)?.[1] || null;
 
       appendChatMsg('ai', reply + '\n\nلو عايز تشوف صور شبيهها قولي "جيبي شبيهها" 🔍');
