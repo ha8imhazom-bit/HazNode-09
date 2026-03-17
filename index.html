@@ -751,9 +751,15 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
   <div class="modal" style="width:460px">
     <div class="modal-titlebar" style="background:#001a00;color:#55cc55;border-bottom-color:#1a3a1a">
       [AI] AIhaz -- TERMINAL
-      <button class="modal-close" style="background:#003300;color:#55ff55;border-color:#1a5a1a" onclick="closeModal('chatModal')">[x]</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button onclick="openModal('settingsModal')" style="font-size:10px;padding:2px 8px;background:#001500;color:#55aa55;border:1px solid #1a5a1a;cursor:pointer;font-family:monospace">[⚙] Key</button>
+        <button class="modal-close" style="background:#003300;color:#55ff55;border-color:#1a5a1a" onclick="closeModal('chatModal')">[x]</button>
+      </div>
     </div>
     <div class="modal-body" style="padding:14px">
+      <div id="noKeyWarning" style="display:none;background:#0a0000;border:1px solid #5a0000;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#cc5555;text-align:center">
+        [!] مفيش API Key — اضغط [⚙ Key] فوق وحط الـ key بتاعك
+      </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span style="font-size:9px;color:#1a3a1a;letter-spacing:1px" id="ownerBadge"></span>
         <button onclick="clearChatHistory()" style="font-size:9px;padding:2px 8px;background:#0a0000;color:#553333;border:1px solid #2a0000;cursor:pointer;font-family:monospace">[DEL] مسح المحادثة</button>
@@ -778,6 +784,32 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
           oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
           style="flex:1;background:#000d00;border:1px solid #0a2a0a;color:#77cc77;padding:6px 8px;font-family:'Courier Prime',monospace;font-size:12px;outline:none;resize:none;overflow-y:auto;line-height:1.4"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SETTINGS (API KEY) -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="width:400px">
+    <div class="modal-titlebar" style="background:#000a1a;color:#5599cc;border-bottom-color:#1a3a5a">
+      [⚙] إعدادات الـ API Key
+      <button class="modal-close" style="background:#001a33;color:#55aaff;border-color:#1a5a8a" onclick="closeModal('settingsModal')">[x]</button>
+    </div>
+    <div class="modal-body" style="padding:16px;gap:12px">
+      <p style="font-size:11px;color:#558899;line-height:1.6">
+        الـ key بيتحفظ في متصفحك فقط — مش في الكود ومش على GitHub.<br>
+        روح <span style="color:#55aaff">console.groq.com/keys</span> واعمل key جديد لو محتاج.
+      </p>
+      <label style="font-size:11px;color:#558899;letter-spacing:1px">// Groq API Key:</label>
+      <input type="password" id="groqKeyInput" placeholder="gsk_..."
+        style="width:100%;background:#050d1a;border:1px solid #1a3a5a;color:#55aaff;padding:8px 10px;font-family:Courier Prime,monospace;font-size:13px;outline:none;letter-spacing:1px"
+        onkeydown="if(event.key==='Enter')saveGroqKey()"/>
+      <div id="keyStatus" style="font-size:10px;min-height:16px;color:#3a7a3a"></div>
+      <div style="display:flex;gap:8px">
+        <button class="modal-btn green" onclick="saveGroqKey()" style="flex:1">[ حفظ الـ Key ]</button>
+        <button class="modal-btn" onclick="clearGroqKey()" style="background:#0a0000;color:#cc5555;border-color:#5a0000">[ حذف ]</button>
       </div>
     </div>
   </div>
@@ -1461,11 +1493,62 @@ function confirmConvert(){
 }
 
 // ============================================================
-// AI CHAT (Groq)
+// AI CHAT (Groq) — الـ key بيتحفظ في localStorage مش في الكود
 // ============================================================
-const GROQ_KEY   = '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';
+function getGroqKey(){ return localStorage.getItem('groq_api_key') || ''; }
+function setGroqKey(k){ localStorage.setItem('groq_api_key', k.trim()); }
 const GROQ_TEXT  = 'llama-3.3-70b-versatile';
 const GROQ_VISION= 'meta-llama/llama-4-scout-17b-16e-instruct';
+
+function saveGroqKey(){
+  const inp = document.getElementById('groqKeyInput');
+  const val = inp.value.trim();
+  const status = document.getElementById('keyStatus');
+  if(!val || !val.startsWith('gsk_')){
+    status.style.color='#cc5555';
+    status.textContent='[!] الـ key لازم يبدأ بـ gsk_';
+    return;
+  }
+  setGroqKey(val);
+  status.style.color='#3a8a3a';
+  status.textContent='[OK] تم الحفظ ✓';
+  inp.value='';
+  checkKeyWarning();
+  setTimeout(()=>closeModal('settingsModal'), 800);
+}
+
+function clearGroqKey(){
+  localStorage.removeItem('groq_api_key');
+  document.getElementById('keyStatus').style.color='#885555';
+  document.getElementById('keyStatus').textContent='[X] تم الحذف';
+  checkKeyWarning();
+}
+
+function checkKeyWarning(){
+  const warn = document.getElementById('noKeyWarning');
+  if(!warn) return;
+  warn.style.display = getGroqKey() ? 'none' : 'block';
+}
+
+// عند فتح modal الإعدادات، بين الـ key المحفوظ (مخفي)
+const _origOpenModal = window.openModal;
+window.openModal = function(id){
+  _origOpenModal(id);
+  if(id === 'settingsModal'){
+    const k = getGroqKey();
+    const inp = document.getElementById('groqKeyInput');
+    const status = document.getElementById('keyStatus');
+    if(k){ 
+      inp.placeholder = k.slice(0,8) + '...' + k.slice(-4) + ' (محفوظ)';
+      status.style.color='#3a8a3a';
+      status.textContent='[✓] يوجد key محفوظ';
+    } else {
+      inp.placeholder = 'gsk_...';
+      status.textContent='';
+    }
+  }
+  if(id === 'chatModal') checkKeyWarning();
+};
 
 function getSysPrompt(){
   if(ownerVerified){
@@ -1592,7 +1675,7 @@ async function sendChat(){
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + GROQ_KEY
+        'Authorization': 'Bearer ' + getGroqKey()
       },
       body: JSON.stringify({
         model: model,
