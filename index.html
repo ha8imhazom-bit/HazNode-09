@@ -2089,67 +2089,45 @@ function displayFluxImage(prompt, bubble) {
   const seed = Math.floor(Math.random() * 99999);
   const cleanPrompt = prompt.trim();
   const encodedPrompt = encodeURIComponent(cleanPrompt);
-
-  // قائمة sources بالترتيب — لو واحد فشل بيجرب التاني
-  const sources = [
-    {
-      url: 'https://image.pollinations.ai/prompt/' + encodedPrompt + '?width=512&height=512&seed=' + seed + '&nologo=true&enhance=true',
-      label: 'Pollinations'
-    },
-    {
-      // Picsum مع keyword من الـ prompt كـ seed
-      url: 'https://source.unsplash.com/512x512/?' + encodedPrompt + '&sig=' + seed,
-      label: 'Unsplash'
-    },
-    {
-      // Lexica fallback — صور AI ثابتة
-      url: 'https://picsum.photos/seed/' + seed + '/512/512',
-      label: 'Picsum'
-    }
-  ];
-
-  let srcIndex = 0;
+  const imgUrl = 'https://image.pollinations.ai/prompt/' + encodedPrompt
+    + '?width=512&height=512&seed=' + seed + '&nologo=true&enhance=true';
 
   const newImg = document.createElement('img');
   newImg.alt = cleanPrompt;
-  newImg.referrerPolicy = 'no-referrer';
-  newImg.crossOrigin = 'anonymous';
   newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;box-shadow:0 0 14px #8b000055;cursor:pointer;display:block;';
   newImg.title = 'اضغط لفتح بالحجم الكامل';
+  newImg.onclick = function(){ window.open(imgUrl, '_blank'); };
 
-  function tryNext() {
-    if (srcIndex >= sources.length) {
-      loadingText.style.color = '#cc5555';
-      loadingText.innerText = '[!] مش قادر يجيب صورة دلوقتي — جرب تاني بعد شوية.';
-      return;
+  let loaded = false;
+  const timer = setTimeout(function(){
+    if(!loaded){
+      loadingText.style.color = '#885555';
+      loadingText.innerText = '🖼️ الصورة جاهزة — اضغط هنا لفتحها ↗';
+      loadingText.style.cursor = 'pointer';
+      loadingText.onclick = function(){ window.open(imgUrl, '_blank'); };
     }
-    const src = sources[srcIndex];
-    loadingText.innerText = '🎨 جاري التحميل (' + src.label + ')...';
-    newImg.onclick = function(){ window.open(src.url, '_blank'); };
-    newImg.src = src.url;
-    srcIndex++;
-  }
+  }, 25000);
 
   newImg.onload = function(){
+    loaded = true;
+    clearTimeout(timer);
     loadingText.remove();
     bubble.appendChild(newImg);
-
-    // label صغير بيقول المصدر
-    const srcLabel = document.createElement('div');
-    srcLabel.style.cssText = 'font-size:9px;color:#2a1a2a;margin-top:2px;font-family:monospace;';
-    srcLabel.textContent = '// ' + sources[srcIndex-1]?.label + ' — ' + cleanPrompt;
-    bubble.appendChild(srcLabel);
-
     const msgs = document.getElementById('chatMsgs');
     if(msgs) msgs.scrollTop = msgs.scrollHeight;
   };
 
   newImg.onerror = function(){
-    // جرب المصدر الجاي
-    tryNext();
+    loaded = true;
+    clearTimeout(timer);
+    loadingText.style.color = '#885555';
+    loadingText.innerText = '🖼️ الصورة اتولّدت — اضغط هنا لفتحها ↗';
+    loadingText.style.cursor = 'pointer';
+    loadingText.style.textDecoration = 'underline';
+    loadingText.onclick = function(){ window.open(imgUrl, '_blank'); };
   };
 
-  tryNext();
+  newImg.src = imgUrl;
 }
 
 function appendChatMsg(role, text){
