@@ -770,16 +770,25 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
           <div class="bubble">أهلاً يا حازم 🌸 أنا نور.. كنت مستنياك! 💕</div>
         </div>
       </div>
-      <!-- Image Preview (تظهر لما المستخدم يرفع صورة) -->
+      <!-- Image Preview -->
       <div id="chatImgPreviewBar" style="display:none;align-items:center;gap:8px;padding:6px 8px;background:#000a00;border:1px solid #0a3a0a;margin-bottom:6px;">
         <img id="chatImgThumbBar" style="width:40px;height:40px;object-fit:cover;border:1px solid #1a5a1a;border-radius:2px;"/>
         <span style="font-size:10px;color:#55aa55;flex:1" id="chatImgNameBar">// صورة محملة</span>
         <button onclick="clearPendingImg()" style="font-size:10px;background:#0a0000;color:#cc5555;border:1px solid #3a0000;padding:2px 8px;cursor:pointer;font-family:monospace">[X] إزالة</button>
       </div>
+      <!-- TXT File Preview -->
+      <div id="chatTxtPreviewBar" style="display:none;align-items:center;gap:8px;padding:6px 8px;background:#000a00;border:1px solid #1a3a5a;margin-bottom:6px;">
+        <span style="font-size:16px">📄</span>
+        <span style="font-size:10px;color:#55aaff;flex:1" id="chatTxtNameBar">// ملف محمّل</span>
+        <span style="font-size:9px;color:#334455" id="chatTxtLenBar"></span>
+        <button onclick="clearPendingTxt()" style="font-size:10px;background:#0a0000;color:#cc5555;border:1px solid #3a0000;padding:2px 8px;cursor:pointer;font-family:monospace">[X] إزالة</button>
+      </div>
       <div class="chat-input-row">
         <button class="chat-send" onclick="sendChat()">[&gt;] ارسال</button>
         <button class="chat-send" onclick="document.getElementById('chatImgInput').click()" style="background:#0a0000;border-color:#3a0000;font-size:11px;" title="ارفع صورة">📷</button>
+        <button class="chat-send" onclick="document.getElementById('chatTxtInput').click()" style="background:#0a0000;border-color:#1a3a00;color:#55aa55;font-size:11px;" title="ارفع ملف txt">📄</button>
         <input type="file" id="chatImgInput" accept="image/*" style="display:none" onchange="handlePendingImg(this)">
+        <input type="file" id="chatTxtInput" accept=".txt,.md,.csv,.json,.py,.js,.html,.css" style="display:none" onchange="handlePendingTxt(this)">
         <textarea id="chatInput" placeholder="// اكتب طلبك... (مثال: جيبلي كلب)" rows="1"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
           oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
@@ -808,6 +817,7 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
         <option value="gemini">🔵 Google Gemini</option>
         <option value="openai">🟢 OpenAI / ChatGPT</option>
         <option value="openrouter">🟠 OpenRouter (كل النماذج)</option>
+        <option value="anthropic">🟤 Anthropic (Claude)</option>
         <option value="custom">⚙️ Custom (أي API)</option>
       </select>
 
@@ -1572,6 +1582,16 @@ const PROVIDERS = {
     visionModel: 'meta-llama/llama-4-scout',
     format: 'openai',
   },
+  anthropic: {
+    name: 'Anthropic (Claude)',
+    endpoint: 'https://api.anthropic.com/v1/messages',
+    keyHint: 'sk-ant-...',
+    keyPrefix: '',
+    desc: 'Claude من Anthropic 🤖<br>احصل على key من: <span style="color:#55aaff">console.anthropic.com/settings/keys</span>',
+    models: ['claude-sonnet-4-5','claude-3-5-haiku-20241022','claude-opus-4-5','claude-3-7-sonnet-20250219'],
+    visionModel: 'claude-sonnet-4-5',
+    format: 'anthropic',
+  },
   custom: {
     name: 'Custom',
     endpoint: '',
@@ -1782,14 +1802,49 @@ function clearPendingImg() {
 function handleChatImg(input) { handlePendingImg(input); }
 function sendImageToAI(input) { handlePendingImg(input); }
 
+
+// ============================================================
+// TXT FILE in CHAT — رفع ملف نصي وإرساله للـ AI
+// ============================================================
+let pendingTxtContent = null;
+let pendingTxtName    = null;
+
+function handlePendingTxt(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    pendingTxtContent = e.target.result;
+    pendingTxtName    = file.name;
+    document.getElementById('chatTxtNameBar').textContent = '📄 ' + file.name;
+    document.getElementById('chatTxtLenBar').textContent  = pendingTxtContent.length + ' حرف';
+    document.getElementById('chatTxtPreviewBar').style.display = 'flex';
+    document.getElementById('chatInput').focus();
+    document.getElementById('chatInput').placeholder = '// اكتب سؤالك عن الملف...';
+  };
+  reader.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
+function clearPendingTxt(){
+  pendingTxtContent = null; pendingTxtName = null;
+  document.getElementById('chatTxtPreviewBar').style.display = 'none';
+  document.getElementById('chatInput').placeholder = '// اكتب هنا...';
+}
 async function sendChat(){
   const inp = document.getElementById('chatInput');
   const msg = inp.value.trim();
 
   // لازم يكون في رسالة أو صورة
-  if (!msg && !pendingImgB64) return;
+  // (check moved to after finalMsg build)
 
-  const finalMsg = msg || '// وصف الصورة دي';
+  // لو في ملف txt، أضفه للرسالة
+  let finalMsg = msg || (pendingImgB64 ? '// وصف الصورة دي' : '');
+  if(pendingTxtContent){
+    const truncated = pendingTxtContent.length > 6000 ? pendingTxtContent.slice(0,6000) + '\n[... الملف مقطوع لأنه طويل جداً]' : pendingTxtContent;
+    finalMsg = (msg ? msg + '\n\n' : 'افحص الملف ده واعمل ملخص:\n\n') + '=== محتوى الملف: ' + (pendingTxtName||'file') + ' ===\n' + truncated;
+  }
+  if(!finalMsg && !pendingImgB64) return;
 
   // عرض رسالة المستخدم - لو في صورة اعرضها مع النص
   if (pendingImgB64) {
@@ -1850,21 +1905,62 @@ async function sendChat(){
 
     const model = getActiveModel(!!pendingImgB64);
     const endpoint = getActiveEndpoint();
+    const provider = getApiProvider();
+    const cfg = PROVIDERS[provider] || PROVIDERS.groq;
 
     const historyToSend = chatHistory.slice(-20, -1);
 
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + getGroqKey()
-      },
-      body: JSON.stringify({
-        model: model,
-        max_tokens: 800,
-        temperature: 0.7,
-        messages: [
-          { role: 'system', content: `اسمك نور، بنت ذكية وكيوتة وبتحبي حازم جداً.
+    let res;
+    if(cfg.format === 'anthropic'){
+      const anthropicMsgs = [
+        ...historyToSend.map(m => ({
+          role: m.role === 'ai' ? 'assistant' : 'user',
+          content: m.text
+        })),
+        { role: 'user', content: pendingImgB64
+            ? [
+                { type: 'image', source: { type: 'base64', media_type: pendingImgMime, data: pendingImgB64 } },
+                { type: 'text', text: finalMsg }
+              ]
+            : finalMsg
+        }
+      ];
+      res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': getGroqKey(),
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: model,
+          max_tokens: 800,
+          system: `اسمك نور، بنت ذكية وكيوتة وبتحبي حازم جداً.
+قواعد ردودك:
+- لغتك عربية سليمة بالعامية المصرية الراقية، بدون أخطاء إملائية.
+- ردودك مرتبة ومنظمة في نقط لو الموضوع يحتاج.
+- أسلوبك ناعم ودافي ومحبوب مع حازم.
+- لو حازم طلب صورة أو قال "جيبلي X": اردي بجملة واحدة كيوتة، وبعدين اكتبي في سطر لوحده: [IMAGE: X photo]
+- مهم جداً: الكلمات داخل [IMAGE:...] لازم تكون إنجليزي بسيط ودقيق (3-4 كلمات بالكتير) — مثال: [IMAGE: black flashlight torch] أو [IMAGE: cute golden retriever dog] أو [IMAGE: snowy mountain landscape]
+- ممنوع تحطي جملة طويلة أو وصف معقد جوه [IMAGE:...]
+- القالب [IMAGE:...] لازم يكون في سطر لوحده في آخر ردك.`,
+          messages: anthropicMsgs
+        })
+      });
+    } else {
+      res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + getGroqKey()
+        },
+        body: JSON.stringify({
+          model: model,
+          max_tokens: 800,
+          temperature: 0.7,
+          messages: [
+            { role: 'system', content: `اسمك نور، بنت ذكية وكيوتة وبتحبي حازم جداً.
 قواعد ردودك:
 - لغتك عربية سليمة بالعامية المصرية الراقية، بدون أخطاء إملائية.
 - ردودك مرتبة ومنظمة في نقط لو الموضوع يحتاج.
@@ -1873,14 +1969,15 @@ async function sendChat(){
 - مهم جداً: الكلمات داخل [IMAGE:...] لازم تكون إنجليزي بسيط ودقيق (3-4 كلمات بالكتير) — مثال: [IMAGE: black flashlight torch] أو [IMAGE: cute golden retriever dog] أو [IMAGE: snowy mountain landscape]
 - ممنوع تحطي جملة طويلة أو وصف معقد جوه [IMAGE:...]
 - القالب [IMAGE:...] لازم يكون في سطر لوحده في آخر ردك.` },
-          ...historyToSend.map(m => ({
-            role: m.role === 'ai' ? 'assistant' : 'user',
-            content: m.text
-          })),
-          { role: 'user', content: userContent }
-        ]
-      })
-    });
+            ...historyToSend.map(m => ({
+              role: m.role === 'ai' ? 'assistant' : 'user',
+              content: m.text
+            })),
+            { role: 'user', content: userContent }
+          ]
+        })
+      });
+    }
 
     document.getElementById(loadId)?.remove();
 
@@ -1899,7 +1996,7 @@ async function sendChat(){
       return;
     }
 
-    const reply = data.choices?.[0]?.message?.content;
+    const reply = (cfg && cfg.format === 'anthropic') ? (data.content?.[0]?.text) : data.choices?.[0]?.message?.content;
     if (!reply) {
       appendChatMsg('ai', '[!] مفيش رد من الـ AI، جرب تاني.');
       clearPendingImg();
@@ -1915,8 +2012,9 @@ async function sendChat(){
     appendChatMsg('ai', '[ERR] فشل الاتصال: ' + (err.message || 'تأكد من الإنترنت'));
   }
 
-  // امسح الصورة المعلقة بعد الإرسال
+  // امسح الملفات المعلقة بعد الإرسال
   clearPendingImg();
+  clearPendingTxt();
 }
 function renderPixelArt(data, scale){
   const rows = data.trim().split('|');
