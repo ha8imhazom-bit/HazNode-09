@@ -826,6 +826,12 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
       <!-- وصف Provider مع رابط -->
       <div id="providerDesc" style="font-size:11px;color:#558899;line-height:1.7;background:#05101a;border:1px solid #1a3a5a;padding:8px 10px"></div>
 
+      <!-- CORS Warning for Anthropic -->
+      <div id="anthropicCorsWarn" style="display:none;background:#1a0000;border:1px solid #8b0000;padding:8px 10px;font-size:11px;color:#ff7777;line-height:1.7">
+        ⛔ Anthropic API لا يدعم الاستدعاء المباشر من المتصفح.<br>
+        ✅ <b>الحل:</b> اختر <b>OpenRouter</b> واستخدم نفس الـ key بعد التسجيل على openrouter.ai — يدعم كل موديلات Claude.
+      </div>
+
       <!-- Custom endpoint (يظهر بس للـ custom) -->
       <div id="customEndpointWrap" style="display:none">
         <label style="font-size:11px;color:#558899;letter-spacing:1px">// API Endpoint URL:</label>
@@ -1596,11 +1602,11 @@ const PROVIDERS = {
   openrouter: {
     name: 'OpenRouter',
     endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-    keyHint: 'sk-or-...',
+    keyHint: 'sk-or-v1-...',
     keyPrefix: '',
-    desc: 'بوابة لكل النماذج (Claude, Llama, Mistral, إلخ) 🔀<br>احصل على key من: <span style="color:#55aaff">openrouter.ai/keys</span>',
-    models: ['meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-7b-instruct:free','google/gemma-3-27b-it:free','anthropic/claude-3.5-haiku','openai/gpt-4o'],
-    visionModel: 'meta-llama/llama-4-scout',
+    desc: '✅ بيدعم Claude وكل النماذج — الأفضل لو عندك Anthropic key!<br>سجّل على <span style="color:#55aaff">openrouter.ai</span> واضغط <b>Keys</b> — مجاني للبداية',
+    models: ['anthropic/claude-sonnet-4-5','anthropic/claude-3-5-haiku','anthropic/claude-opus-4-5','meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-7b-instruct:free','openai/gpt-4o'],
+    visionModel: 'anthropic/claude-sonnet-4-5',
     format: 'openai',
   },
   anthropic: {
@@ -1608,7 +1614,7 @@ const PROVIDERS = {
     endpoint: 'https://api.anthropic.com/v1/messages',
     keyHint: 'sk-ant-...',
     keyPrefix: '',
-    desc: 'Claude من Anthropic 🤖<br>احصل على key من: <span style="color:#55aaff">console.anthropic.com/settings/keys</span>',
+    desc: '⚠️ لا يعمل من المتصفح مباشرة (CORS). استخدم <b>OpenRouter</b> بدلاً منه للوصول لنماذج Claude.<br><span style="color:#cc5555">sk-ant-... لن يعمل من GitHub Pages أو ملفات HTML</span>',
     models: ['claude-sonnet-4-5','claude-3-5-haiku-20241022','claude-opus-4-5','claude-3-7-sonnet-20250219'],
     visionModel: 'claude-sonnet-4-5',
     format: 'anthropic',
@@ -1648,6 +1654,10 @@ function onProviderChange(){
 
   const customWrap = document.getElementById('customEndpointWrap');
   const modelWrap  = document.getElementById('modelSelectWrap');
+
+  // تحذير لو اختار Anthropic مباشرة
+  const antWarn = document.getElementById('anthropicCorsWarn');
+  if(antWarn) antWarn.style.display = (p === 'anthropic') ? 'block' : 'none';
 
   if(p === 'custom'){
     customWrap.style.display = 'block';
