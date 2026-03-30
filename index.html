@@ -861,6 +861,11 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
         <button class="modal-btn green" onclick="saveGroqKey()" style="flex:1">[ حفظ ]</button>
         <button class="modal-btn" onclick="clearGroqKey()" style="background:#0a0000;color:#cc5555;border-color:#5a0000">[ حذف ]</button>
       </div>
+
+      <!-- OpenRouter Image Note -->
+      <div style="border-top:1px solid #1a2a1a;padding-top:10px;margin-top:2px;font-size:10px;color:#2a5a2a;line-height:1.7;background:#05100a;border:1px solid #1a3a1a;padding:8px 10px;border-radius:2px">
+        🖼️ <b style="color:#3a8a3a">توليد الصور:</b> يشتغل تلقائياً لو اخترت <b>OpenRouter</b> كـ Provider — نفس الـ key!
+      </div>
     </div>
   </div>
 </div>
@@ -1725,6 +1730,7 @@ function checkKeyWarning(){
   warn.style.display = getGroqKey() ? 'none' : 'block';
 }
 
+
 // الـ endpoint والموديل الفعلي حسب الـ provider
 function getActiveEndpoint(){
   const p = getApiProvider();
@@ -1744,6 +1750,7 @@ const _origOpenModal = window.openModal;
 window.openModal = function(id){
   _origOpenModal(id);
   if(id === 'settingsModal'){
+
     const p = getApiProvider();
     const sel = document.getElementById('apiProviderSelect');
     if(sel) sel.value = p;
@@ -2078,78 +2085,92 @@ function renderPixelArt(data, scale){
 // عرض رسالة في الشات (نص أو رسمة بكسل)
 // تفصل الرسمة عن النص وتعرضهم بترتيب صح
 // ============================================================
-// عرض صورة Flux من Pollinations
-// ============================================================
-function displayFluxImage(prompt, bubble) {
+async function displayFluxImage(prompt, bubble) {
   const loadingText = document.createElement('p');
   loadingText.style.cssText = 'color:#885555;font-family:monospace;font-size:11px;margin:6px 0;';
   loadingText.innerText = '🎨 بتولّد الصورة...';
   bubble.appendChild(loadingText);
 
-  const seed = Math.floor(Math.random() * 99999);
-  const cleanPrompt = prompt.trim();
-  const encodedPrompt = encodeURIComponent(cleanPrompt);
+  const msgs = document.getElementById('chatMsgs');
+  const apiKey  = getGroqKey();
+  const provider = getApiProvider();
 
-  // قائمة sources بالترتيب — لو واحد فشل بيجرب التاني
-  const sources = [
-    {
-      url: 'https://image.pollinations.ai/prompt/' + encodedPrompt + '?width=512&height=512&seed=' + seed + '&nologo=true&enhance=true',
-      label: 'Pollinations'
-    },
-    {
-      // Picsum مع keyword من الـ prompt كـ seed
-      url: 'https://source.unsplash.com/512x512/?' + encodedPrompt + '&sig=' + seed,
-      label: 'Unsplash'
-    },
-    {
-      // Lexica fallback — صور AI ثابتة
-      url: 'https://picsum.photos/seed/' + seed + '/512/512',
-      label: 'Picsum'
-    }
-  ];
-
-  let srcIndex = 0;
-
-  const newImg = document.createElement('img');
-  newImg.alt = cleanPrompt;
-  newImg.referrerPolicy = 'no-referrer';
-  newImg.crossOrigin = 'anonymous';
-  newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;box-shadow:0 0 14px #8b000055;cursor:pointer;display:block;';
-  newImg.title = 'اضغط لفتح بالحجم الكامل';
-
-  function tryNext() {
-    if (srcIndex >= sources.length) {
-      loadingText.style.color = '#cc5555';
-      loadingText.innerText = '[!] مش قادر يجيب صورة دلوقتي — جرب تاني بعد شوية.';
-      return;
-    }
-    const src = sources[srcIndex];
-    loadingText.innerText = '🎨 جاري التحميل (' + src.label + ')...';
-    newImg.onclick = function(){ window.open(src.url, '_blank'); };
-    newImg.src = src.url;
-    srcIndex++;
+  if (!apiKey || provider !== 'openrouter') {
+    loadingText.style.color = '#cc5555';
+    loadingText.innerText = '[!] توليد الصور يحتاج OpenRouter — روح الإعدادات واختار OpenRouter وحط الـ key.';
+    if(msgs) msgs.scrollTop = msgs.scrollHeight;
+    return;
   }
 
-  newImg.onload = function(){
+  // الموديلات الحقيقية لـ image generation على OpenRouter
+  const imageModels = [
+    'google/gemini-3.1-flash-image-preview',
+    'google/gemini-2.0-flash-exp:free',
+  ];
+
+  function extractImage(data) {
+    // جرب كل الأماكن الممكنة اللي الصورة ممكن ترجع فيها
+    const msg = data?.choices?.[0]?.message;
+    if (!msg) return null;
+
+    // content array فيه image_url block
+    if (Array.isArray(msg.content)) {
+      const part = msg.content.find(p => p.type === 'image_url');
+      if (part?.image_url?.url) return part.image_url.url;
+    }
+
+    // images[] مباشرة
+    if (msg.images?.[0]) return msg.images[0];
+
+    // output_image
+    if (msg.output_image) return msg.output_image;
+
+    return null;
+  }
+
+  function showImg(src) {
     loadingText.remove();
+    const newImg = document.createElement('img');
+    newImg.src = src.startsWith('data:') ? src : 'data:image/png;base64,' + src;
+    newImg.alt = prompt;
+    newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;box-shadow:0 0 14px #8b000055;cursor:pointer;display:block;';
+    newImg.title = 'اضغط لتنزيل الصورة';
+    newImg.onclick = function(){
+      const a = document.createElement('a');
+      a.href = newImg.src; a.download = 'nour_img.png'; a.click();
+    };
     bubble.appendChild(newImg);
-
-    // label صغير بيقول المصدر
-    const srcLabel = document.createElement('div');
-    srcLabel.style.cssText = 'font-size:9px;color:#2a1a2a;margin-top:2px;font-family:monospace;';
-    srcLabel.textContent = '// ' + sources[srcIndex-1]?.label + ' — ' + cleanPrompt;
-    bubble.appendChild(srcLabel);
-
-    const msgs = document.getElementById('chatMsgs');
     if(msgs) msgs.scrollTop = msgs.scrollHeight;
-  };
+  }
 
-  newImg.onerror = function(){
-    // جرب المصدر الجاي
-    tryNext();
-  };
+  for (const model of imageModels) {
+    try {
+      loadingText.innerText = '🎨 بتولّد... (' + model.split('/')[1] + ')';
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: JSON.stringify({
+          model,
+          modalities: ['image', 'text'],
+          messages: [{ role: 'user', content: prompt.trim() }]
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        console.warn('[IMG]', model, data?.error?.message);
+        continue;
+      }
+      const imgSrc = extractImage(data);
+      if (imgSrc) { showImg(imgSrc); return; }
+      console.warn('[IMG] no image in response from', model, data);
+    } catch(e) {
+      console.warn('[IMG] fetch error', model, e.message);
+    }
+  }
 
-  tryNext();
+  loadingText.style.color = '#cc5555';
+  loadingText.innerText = '[!] مش قادر يولّد صورة — تأكد من الـ OpenRouter key وجرب تاني.';
+  if(msgs) msgs.scrollTop = msgs.scrollHeight;
 }
 
 function appendChatMsg(role, text){
