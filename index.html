@@ -818,7 +818,7 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
         <option value="groq">🟣 Groq (مجاني وسريع)</option>
         <option value="gemini">🔵 Google Gemini</option>
         <option value="openai">🟢 OpenAI / ChatGPT</option>
-        <option value="openrouter">🟠 OpenRouter (كل النماذج)</option>
+        <option value="openrouter">🟠 OpenRouter ← الأفضل للصور!</option>
         <option value="anthropic">🟤 Anthropic (Claude)</option>
         <option value="custom">⚙️ Custom (أي API)</option>
       </select>
@@ -861,10 +861,8 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
         <button class="modal-btn green" onclick="saveGroqKey()" style="flex:1">[ حفظ ]</button>
         <button class="modal-btn" onclick="clearGroqKey()" style="background:#0a0000;color:#cc5555;border-color:#5a0000">[ حذف ]</button>
       </div>
-
-      <!-- OpenRouter Image Note -->
-      <div style="border-top:1px solid #1a2a1a;padding-top:10px;margin-top:2px;font-size:10px;color:#2a5a2a;line-height:1.7;background:#05100a;border:1px solid #1a3a1a;padding:8px 10px;border-radius:2px">
-        🖼️ <b style="color:#3a8a3a">توليد الصور:</b> يشتغل تلقائياً لو اخترت <b>OpenRouter</b> كـ Provider — نفس الـ key!
+      <div style="border-top:1px solid #1a2a1a;padding-top:8px;margin-top:4px;font-size:10px;color:#2a5a2a;line-height:1.7;background:#030d03;border:1px solid #0a2a0a;padding:7px 10px">
+        🖼️ <b style="color:#3a8a3a">توليد الصور:</b> يشتغل تلقائياً لو اخترت <b>OpenRouter</b> — نفس الـ key!
       </div>
     </div>
   </div>
@@ -1730,7 +1728,6 @@ function checkKeyWarning(){
   warn.style.display = getGroqKey() ? 'none' : 'block';
 }
 
-
 // الـ endpoint والموديل الفعلي حسب الـ provider
 function getActiveEndpoint(){
   const p = getApiProvider();
@@ -1750,7 +1747,6 @@ const _origOpenModal = window.openModal;
 window.openModal = function(id){
   _origOpenModal(id);
   if(id === 'settingsModal'){
-
     const p = getApiProvider();
     const sel = document.getElementById('apiProviderSelect');
     if(sel) sel.value = p;
@@ -1774,21 +1770,20 @@ window.openModal = function(id){
 function getSysPrompt(){
   const imageRules = `
 
-=== قواعد الصور — مهمة جداً ===
-لما المستخدم يطلب صورة بأي طريقة (مثل: "جيبلي كلب"، "صورة قطة"، "هاتلي X"، "ابحثي عن X")، يجب عليكِ:
-1. اردي بجملة واحدة كيوتة وحنونة بالعربي 💕
-2. في سطر منفصل تماماً في آخر ردك، اكتبي بالظبط:
+=== قواعد الصور — اتبعيها بدقة ===
+لما المستخدم يطلب صورة بأي طريقة (جيبلي / صورة / هاتلي / ابحثي):
+1. اردي بجملة واحدة كيوتة وحنونة بالعربي.
+2. في سطر منفصل في آخر ردك اكتبي بالظبط:
 [IMAGE: وصف إنجليزي دقيق 3-5 كلمات]
 
-مثال على الرد الصح:
-"أمرك يا مولاي، هجيبلك صورة جميلة! 🌸
-[IMAGE: cute golden retriever dog]"
+مثال صح:
+أمرك يا مولاي هجيبلك كلب جميل دلوقتي!
+[IMAGE: cute golden retriever dog]
 
 قواعد صارمة:
-- الكلمات داخل [IMAGE:...] لازم تكون إنجليزي فقط، 3-5 كلمات وصفية دقيقة.
-- [IMAGE:...] لازم يكون في سطر لوحده، آخر حاجة في ردك، من غير أي كلام بعده.
-- لا تكتبي [IMAGE:...] في منتصف الكلام.
-- لو الطلب مش صورة، لا تكتبي [IMAGE:...] خالص.`;
+- [IMAGE:...] في سطر لوحده في آخر الرد بدون أي كلام بعده.
+- محتوى [IMAGE:...] إنجليزي فقط 3-5 كلمات وصفية.
+- لو الطلب مش صورة لا تكتبي [IMAGE:...] خالص.`;
 
   if(ownerVerified){
     return `أنتِ نور 🌸، المساعدة الشخصية لسيدك حازم.
@@ -1931,18 +1926,15 @@ async function sendChat(){
       let visionInstruction;
       if (isRequestForSimilar) {
         visionInstruction = `المستخدم طلب صورة شبيهة بالصورة دي.
-وصّفي الصورة بـ 3-5 كلمات إنجليزية دقيقة.
-يجب أن يكون آخر سطر في ردك بالظبط بالشكل ده (من غير أي حاجة بعده):
-[IMAGE: الكلمات الإنجليزية]`;
+وصّفي الصورة بـ 3-5 كلمات إنجليزية دقيقة للـ search (مثال: "black flashlight torch" أو "mountain snow winter").
+اكتبي في آخر ردك في سطر لوحده بالظبط: [IMAGE: الكلمات الإنجليزية]`;
       } else if (isRequestForDifferent) {
         const subject = finalMsg.replace(/جيبلي|هاتلي|ابحثي|دورلي|صورة|صوره/g, '').trim();
         visionInstruction = `المستخدم طلب: ${finalMsg}
-يجب أن يكون آخر سطر في ردك بالظبط:
-[IMAGE: ${subject || 'photo'} photo]`;
+اكتبي في آخر ردك في سطر لوحده: [IMAGE: ${subject} photo]`;
       } else {
-        visionInstruction = `لو الطلب يحتاج صورة خارجية، يجب أن يكون آخر سطر في ردك:
-[IMAGE: وصف إنجليزي دقيق 3-5 كلمات]
-لو مجرد سؤال عن الصورة، أجيبي بشكل طبيعي من غير [IMAGE:...].`;
+        visionInstruction = `لو الطلب يحتاج صورة خارجية، اكتبي في السطر الأخير: [IMAGE: وصف إنجليزي دقيق 3-5 كلمات]
+لو مجرد سؤال عن الصورة، أجيبي بشكل طبيعي.`;
       }
 
       userContent = [
@@ -1958,10 +1950,9 @@ async function sendChat(){
     const provider = getApiProvider();
     const cfg = PROVIDERS[provider] || PROVIDERS.groq;
 
-    // مسح [IMAGE:...] من الـ history — عشان الـ AI ميفتكرش الصورة اتعملت بالفعل
     const historyToSend = chatHistory.slice(-20, -1).map(m => ({
       ...m,
-      text: m.text.replace(/\[IMAGE:\s*[^\]]+\]/gi, '').trim()
+      text: m.text.replace(/\[IMAGE:[^\]]+\]/gi, '').trim()
     }));
 
     let res;
@@ -2035,7 +2026,6 @@ async function sendChat(){
       return;
     }
 
-    // استخراج الرد — ممكن يكون string أو array of content blocks
     let rawContent = (cfg && cfg.format === 'anthropic')
       ? data.content
       : data.choices?.[0]?.message?.content;
@@ -2044,9 +2034,7 @@ async function sendChat(){
     if (typeof rawContent === 'string') {
       reply = rawContent;
     } else if (Array.isArray(rawContent)) {
-      // اجمع النصوص من الـ blocks
       reply = rawContent.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
-      // لو مفيش نص خالص بس في image block، اعمل placeholder
       if (!reply) reply = '[IMAGE_ONLY]';
     }
 
@@ -2103,32 +2091,30 @@ function renderPixelArt(data, scale){
 // عرض رسالة في الشات (نص أو رسمة بكسل)
 // تفصل الرسمة عن النص وتعرضهم بترتيب صح
 // ============================================================
+// عرض صورة Flux من Pollinations
+// ============================================================
 async function displayFluxImage(prompt, bubble) {
   const loadingText = document.createElement('p');
   loadingText.style.cssText = 'color:#885555;font-family:monospace;font-size:11px;margin:6px 0;';
-  loadingText.innerText = '🎨 بتولّد الصورة...';
+  loadingText.innerText = '\ud83c\udfa8 بتولّد الصورة...';
   bubble.appendChild(loadingText);
 
-  const msgs   = document.getElementById('chatMsgs');
+  const msgs    = document.getElementById('chatMsgs');
   const apiKey  = getGroqKey();
   const provider = getApiProvider();
 
   if (!apiKey || provider !== 'openrouter') {
     loadingText.style.color = '#cc5555';
-    loadingText.innerText = '[!] توليد الصور يحتاج OpenRouter — روح الإعدادات واختار OpenRouter وحط الـ key.';
+    loadingText.innerText = '[!] توليد الصور يحتاج OpenRouter — روح الإعدادات واختار OpenRouter.';
     if(msgs) msgs.scrollTop = msgs.scrollHeight;
     return;
   }
 
   try {
-    loadingText.innerText = '🎨 بتولّد الصورة... (Gemini)';
-
+    loadingText.innerText = '\ud83c\udfa8 بتولّد... (Gemini)';
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
       body: JSON.stringify({
         model: 'google/gemini-3.1-flash-image-preview',
         modalities: ['image', 'text'],
@@ -2138,80 +2124,47 @@ async function displayFluxImage(prompt, bubble) {
 
     const data = await res.json();
 
-    // debug مرئي مؤقت
-    const dbg = document.createElement('pre');
-    dbg.style.cssText = 'font-size:8px;color:#1a3a1a;background:#000800;padding:4px;border:1px solid #0a2a0a;max-width:380px;white-space:pre-wrap;word-break:break-all;margin:2px 0;display:none';
-    const msg = data?.choices?.[0]?.message || {};
-    const contentBlocks = Array.isArray(msg.content) ? msg.content : [];
-    dbg.textContent = 'status:' + res.status
-      + ' | keys:' + Object.keys(msg).join(',')
-      + ' | blocks:' + contentBlocks.map(b => b.type).join(',')
-      + ' | err:' + (data?.error?.message || 'none')
-      + '
-' + JSON.stringify(msg).slice(0, 500);
-    bubble.appendChild(dbg);
-
     if (!res.ok || data.error) {
       loadingText.style.color = '#cc5555';
-      loadingText.innerText = '[!] ' + (data?.error?.message || 'فشل — كود: ' + res.status);
-      dbg.style.display = 'block';
+      loadingText.innerText = '[!] ' + (data.error ? data.error.message : 'كود: ' + res.status);
       if(msgs) msgs.scrollTop = msgs.scrollHeight;
       return;
     }
 
-    // استخراج الصورة — كل الـ formats الممكنة
+    // استخراج الصورة من كل الـ formats الممكنة
+    const msg = data.choices?.[0]?.message;
     let imgSrc = null;
 
     if (Array.isArray(msg.content)) {
       for (const block of msg.content) {
-        // image_url format (OpenRouter standard)
-        if (block.type === 'image_url' && block.image_url?.url) {
-          imgSrc = block.image_url.url; break;
-        }
-        // image format مع source
-        if (block.type === 'image' && block.source?.data) {
-          imgSrc = 'data:' + (block.source.media_type || 'image/png') + ';base64,' + block.source.data; break;
-        }
-        // inline_data format (Gemini native)
-        if (block.type === 'image' && block.inline_data?.data) {
-          imgSrc = 'data:' + (block.inline_data.mime_type || 'image/png') + ';base64,' + block.inline_data.data; break;
-        }
+        if (block.type === 'image_url' && block.image_url?.url) { imgSrc = block.image_url.url; break; }
+        if (block.type === 'image' && block.source?.data) { imgSrc = 'data:' + (block.source.media_type||'image/png') + ';base64,' + block.source.data; break; }
+        if (block.type === 'image' && block.inline_data?.data) { imgSrc = 'data:' + (block.inline_data.mime_type||'image/png') + ';base64,' + block.inline_data.data; break; }
       }
     }
-
-    // fallbacks على مستوى الـ message
-    if (!imgSrc && msg.images?.[0]) imgSrc = msg.images[0];
-    if (!imgSrc && msg.output_image)  imgSrc = msg.output_image;
-    if (!imgSrc && msg.inline_data?.data)
-      imgSrc = 'data:' + (msg.inline_data.mime_type || 'image/png') + ';base64,' + msg.inline_data.data;
+    if (!imgSrc && msg.images?.[0])        imgSrc = msg.images[0];
+    if (!imgSrc && msg.output_image)       imgSrc = msg.output_image;
+    if (!imgSrc && msg.inline_data?.data)  imgSrc = 'data:' + (msg.inline_data.mime_type||'image/png') + ';base64,' + msg.inline_data.data;
 
     if (imgSrc) {
       loadingText.remove();
       const newImg = document.createElement('img');
-      newImg.src = imgSrc.startsWith('data:') ? imgSrc : 'data:image/png;base64,' + imgSrc;
-      newImg.alt = prompt;
+      newImg.src   = imgSrc.startsWith('data:') ? imgSrc : 'data:image/png;base64,' + imgSrc;
+      newImg.alt   = prompt;
       newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;box-shadow:0 0 14px #8b000055;cursor:pointer;display:block;';
-      newImg.title = 'اضغط لتنزيل الصورة';
-      newImg.onclick = function(){
-        const a = document.createElement('a');
-        a.href = newImg.src; a.download = 'nour_img.png'; a.click();
-      };
+      newImg.title = '\ud83d\udcbe اضغط لتنزيل الصورة';
+      newImg.onclick = function(){ const a=document.createElement('a'); a.href=newImg.src; a.download='nour_img.png'; a.click(); };
       bubble.appendChild(newImg);
     } else {
-      // مفيش صورة — اعرض الـ debug
       loadingText.style.color = '#cc5555';
-      loadingText.innerText = '[!] الـ API مردش صورة.';
-      dbg.style.display = 'block';
+      loadingText.innerText = '[!] الموديل مردش صورة — جرب تاني.';
     }
-
   } catch(e) {
     loadingText.style.color = '#cc5555';
     loadingText.innerText = '[!] خطأ: ' + e.message;
   }
-
   if(msgs) msgs.scrollTop = msgs.scrollHeight;
 }
-
 
 function appendChatMsg(role, text){
   const msgs = document.getElementById('chatMsgs');
@@ -2227,9 +2180,8 @@ function appendChatMsg(role, text){
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
 
-  // لقط [IMAGE: prompt] — يشتغل حتى لو في مسافات أو سطر جديد قبله
+  // لقط [IMAGE: prompt]
   const imageMatch = text.match(/\[IMAGE:\s*([\s\S]+?)\]\s*$/i) || text.match(/\[IMAGE:\s*([\s\S]+?)\]/i);
-
 
   if(imageMatch && role === 'ai'){
     const cleanText = text.replace(/\[IMAGE:\s*[\s\S]+?\]/i, '').trim();
