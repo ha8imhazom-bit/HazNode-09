@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -2109,7 +2110,7 @@ async function displayFluxImage(prompt, bubble) {
   loadingText.innerText = '🎨 بتولّد الصورة...';
   bubble.appendChild(loadingText);
 
-  const msgs = document.getElementById('chatMsgs');
+  const msgs   = document.getElementById('chatMsgs');
   const apiKey  = getGroqKey();
   const provider = getApiProvider();
 
@@ -2120,108 +2121,98 @@ async function displayFluxImage(prompt, bubble) {
     return;
   }
 
-  // الموديلات الحقيقية لـ image generation على OpenRouter
-  const imageModels = [
-    'google/gemini-3.1-flash-image-preview',
-    'google/gemini-2.0-flash-exp:free',
-  ];
+  try {
+    loadingText.innerText = '🎨 بتولّد الصورة... (Gemini)';
 
-  function extractImage(data) {
-    const msg = data?.choices?.[0]?.message;
-    if (!msg) { console.log('[IMG DEBUG] no message in data', data); return null; }
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3.1-flash-image-preview',
+        modalities: ['image', 'text'],
+        messages: [{ role: 'user', content: 'Generate an image of: ' + prompt.trim() }]
+      })
+    });
 
-    console.log('[IMG DEBUG] full message keys:', Object.keys(msg));
-    console.log('[IMG DEBUG] content type:', typeof msg.content);
-    if (Array.isArray(msg.content)) {
-      console.log('[IMG DEBUG] content blocks:', msg.content.map(b => b.type));
-    }
+    const data = await res.json();
 
-    // content array فيه image_url block
-    if (Array.isArray(msg.content)) {
-      const part = msg.content.find(p => p.type === 'image_url');
-      if (part?.image_url?.url) return part.image_url.url;
-      // inline_data (Gemini format)
-      const part2 = msg.content.find(p => p.type === 'image');
-      if (part2?.source?.data) return 'data:image/png;base64,' + part2.source.data;
-    }
+    // debug مرئي مؤقت
+    const dbg = document.createElement('pre');
+    dbg.style.cssText = 'font-size:8px;color:#1a3a1a;background:#000800;padding:4px;border:1px solid #0a2a0a;max-width:380px;white-space:pre-wrap;word-break:break-all;margin:2px 0;display:none';
+    const msg = data?.choices?.[0]?.message || {};
+    const contentBlocks = Array.isArray(msg.content) ? msg.content : [];
+    dbg.textContent = 'status:' + res.status
+      + ' | keys:' + Object.keys(msg).join(',')
+      + ' | blocks:' + contentBlocks.map(b => b.type).join(',')
+      + ' | err:' + (data?.error?.message || 'none')
+      + '
+' + JSON.stringify(msg).slice(0, 500);
+    bubble.appendChild(dbg);
 
-    // images[] مباشرة
-    if (msg.images?.[0]) return msg.images[0];
-
-    // output_image
-    if (msg.output_image) return msg.output_image;
-
-    // inline_data على مستوى الـ message مباشرة
-    if (msg.inline_data?.data) return 'data:' + (msg.inline_data.mime_type||'image/png') + ';base64,' + msg.inline_data.data;
-
-    console.log('[IMG DEBUG] no image found in:', JSON.stringify(msg).slice(0,300));
-    return null;
-  }
-
-  function showImg(src) {
-    loadingText.remove();
-    const newImg = document.createElement('img');
-    newImg.src = src.startsWith('data:') ? src : 'data:image/png;base64,' + src;
-    newImg.alt = prompt;
-    newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;box-shadow:0 0 14px #8b000055;cursor:pointer;display:block;';
-    newImg.title = 'اضغط لتنزيل الصورة';
-    newImg.onclick = function(){
-      const a = document.createElement('a');
-      a.href = newImg.src; a.download = 'nour_img.png'; a.click();
-    };
-    bubble.appendChild(newImg);
-    if(msgs) msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  for (const model of imageModels) {
-    try {
-      loadingText.innerText = '🎨 بتولّد... (' + model.split('/')[1] + ')';
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-        body: JSON.stringify({
-          model,
-          modalities: ['image', 'text'],
-          messages: [{ role: 'user', content: 'Generate an image of: ' + prompt.trim() }]
-        })
-      });
-      const data = await res.json();
-
-      // عرض debug مرئي جوا الشات
-      const debugEl = document.createElement('pre');
-      debugEl.style.cssText = 'font-size:9px;color:#335533;background:#001a00;padding:6px;border:1px solid #0a3a0a;overflow-x:auto;max-width:400px;white-space:pre-wrap;word-break:break-all;margin-top:4px;';
-      const msg = data?.choices?.[0]?.message || {};
-      debugEl.textContent = '[DEBUG ' + model.split('/')[1] + ']
-'
-        + 'status: ' + res.status + '
-'
-        + 'error: ' + (data?.error?.message || 'none') + '
-'
-        + 'msg keys: ' + Object.keys(msg).join(', ') + '
-'
-        + 'content type: ' + typeof msg.content + '
-'
-        + (Array.isArray(msg.content) ? 'blocks: ' + msg.content.map(b=>b.type).join(', ') + '
-' : '')
-        + 'raw(300): ' + JSON.stringify(msg).slice(0,300);
-      bubble.appendChild(debugEl);
+    if (!res.ok || data.error) {
+      loadingText.style.color = '#cc5555';
+      loadingText.innerText = '[!] ' + (data?.error?.message || 'فشل — كود: ' + res.status);
+      dbg.style.display = 'block';
       if(msgs) msgs.scrollTop = msgs.scrollHeight;
-
-      if (!res.ok || data.error) continue;
-      const imgSrc = extractImage(data);
-      if (imgSrc) { showImg(imgSrc); return; }
-    } catch(e) {
-      const errEl = document.createElement('div');
-      errEl.style.cssText = 'font-size:9px;color:#cc5555;margin-top:4px;';
-      errEl.textContent = '[FETCH ERR] ' + e.message;
-      bubble.appendChild(errEl);
+      return;
     }
+
+    // استخراج الصورة — كل الـ formats الممكنة
+    let imgSrc = null;
+
+    if (Array.isArray(msg.content)) {
+      for (const block of msg.content) {
+        // image_url format (OpenRouter standard)
+        if (block.type === 'image_url' && block.image_url?.url) {
+          imgSrc = block.image_url.url; break;
+        }
+        // image format مع source
+        if (block.type === 'image' && block.source?.data) {
+          imgSrc = 'data:' + (block.source.media_type || 'image/png') + ';base64,' + block.source.data; break;
+        }
+        // inline_data format (Gemini native)
+        if (block.type === 'image' && block.inline_data?.data) {
+          imgSrc = 'data:' + (block.inline_data.mime_type || 'image/png') + ';base64,' + block.inline_data.data; break;
+        }
+      }
+    }
+
+    // fallbacks على مستوى الـ message
+    if (!imgSrc && msg.images?.[0]) imgSrc = msg.images[0];
+    if (!imgSrc && msg.output_image)  imgSrc = msg.output_image;
+    if (!imgSrc && msg.inline_data?.data)
+      imgSrc = 'data:' + (msg.inline_data.mime_type || 'image/png') + ';base64,' + msg.inline_data.data;
+
+    if (imgSrc) {
+      loadingText.remove();
+      const newImg = document.createElement('img');
+      newImg.src = imgSrc.startsWith('data:') ? imgSrc : 'data:image/png;base64,' + imgSrc;
+      newImg.alt = prompt;
+      newImg.style.cssText = 'width:100%;max-width:420px;border-radius:4px;margin-top:8px;border:2px solid #3a0000;box-shadow:0 0 14px #8b000055;cursor:pointer;display:block;';
+      newImg.title = 'اضغط لتنزيل الصورة';
+      newImg.onclick = function(){
+        const a = document.createElement('a');
+        a.href = newImg.src; a.download = 'nour_img.png'; a.click();
+      };
+      bubble.appendChild(newImg);
+    } else {
+      // مفيش صورة — اعرض الـ debug
+      loadingText.style.color = '#cc5555';
+      loadingText.innerText = '[!] الـ API مردش صورة.';
+      dbg.style.display = 'block';
+    }
+
+  } catch(e) {
+    loadingText.style.color = '#cc5555';
+    loadingText.innerText = '[!] خطأ: ' + e.message;
   }
 
-  loadingText.style.color = '#cc5555';
-  loadingText.innerText = '[!] مش قادر يولّد صورة — شوف الـ debug فوق.';
   if(msgs) msgs.scrollTop = msgs.scrollHeight;
 }
+
 
 function appendChatMsg(role, text){
   const msgs = document.getElementById('chatMsgs');
@@ -2240,26 +2231,6 @@ function appendChatMsg(role, text){
   // لقط [IMAGE: prompt] — يشتغل حتى لو في مسافات أو سطر جديد قبله
   const imageMatch = text.match(/\[IMAGE:\s*([\s\S]+?)\]\s*$/i) || text.match(/\[IMAGE:\s*([\s\S]+?)\]/i);
 
-  // debug مرئي مؤقت — يظهر الـ raw reply دايماً
-  if(role === 'ai'){
-    const dbg = document.createElement('pre');
-    dbg.style.cssText = 'font-size:8px;color:#1a3a1a;background:#000800;padding:4px;border:1px solid #0a2a0a;max-width:380px;white-space:pre-wrap;word-break:break-all;margin:2px 0;';
-    dbg.textContent = '[RAW REPLY]
-' + text.slice(0,400) + '
-[imageMatch: ' + (imageMatch ? imageMatch[1].slice(0,60) : 'NULL') + ']';
-    const tmpBubble = document.createElement('div');
-    tmpBubble.className = 'bubble';
-    tmpBubble.appendChild(dbg);
-    const tmpW = document.createElement('div');
-    tmpW.className = 'chat-msg ai';
-    const tmpL = document.createElement('div');
-    tmpL.className = 'ai-label';
-    tmpL.textContent = 'DEBUG';
-    tmpW.appendChild(tmpL);
-    tmpW.appendChild(tmpBubble);
-    msgs.appendChild(tmpW);
-    msgs.scrollTop = msgs.scrollHeight;
-  }
 
   if(imageMatch && role === 'ai'){
     const cleanText = text.replace(/\[IMAGE:\s*[\s\S]+?\]/i, '').trim();
