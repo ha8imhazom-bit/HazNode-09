@@ -2182,24 +2182,44 @@ async function displayFluxImage(prompt, bubble) {
         body: JSON.stringify({
           model,
           modalities: ['image', 'text'],
-          messages: [{ role: 'user', content: prompt.trim() }]
+          messages: [{ role: 'user', content: 'Generate an image of: ' + prompt.trim() }]
         })
       });
       const data = await res.json();
-      if (!res.ok || data.error) {
-        console.warn('[IMG]', model, data?.error?.message);
-        continue;
-      }
+
+      // عرض debug مرئي جوا الشات
+      const debugEl = document.createElement('pre');
+      debugEl.style.cssText = 'font-size:9px;color:#335533;background:#001a00;padding:6px;border:1px solid #0a3a0a;overflow-x:auto;max-width:400px;white-space:pre-wrap;word-break:break-all;margin-top:4px;';
+      const msg = data?.choices?.[0]?.message || {};
+      debugEl.textContent = '[DEBUG ' + model.split('/')[1] + ']
+'
+        + 'status: ' + res.status + '
+'
+        + 'error: ' + (data?.error?.message || 'none') + '
+'
+        + 'msg keys: ' + Object.keys(msg).join(', ') + '
+'
+        + 'content type: ' + typeof msg.content + '
+'
+        + (Array.isArray(msg.content) ? 'blocks: ' + msg.content.map(b=>b.type).join(', ') + '
+' : '')
+        + 'raw(300): ' + JSON.stringify(msg).slice(0,300);
+      bubble.appendChild(debugEl);
+      if(msgs) msgs.scrollTop = msgs.scrollHeight;
+
+      if (!res.ok || data.error) continue;
       const imgSrc = extractImage(data);
       if (imgSrc) { showImg(imgSrc); return; }
-      console.warn('[IMG] no image in response from', model, data);
     } catch(e) {
-      console.warn('[IMG] fetch error', model, e.message);
+      const errEl = document.createElement('div');
+      errEl.style.cssText = 'font-size:9px;color:#cc5555;margin-top:4px;';
+      errEl.textContent = '[FETCH ERR] ' + e.message;
+      bubble.appendChild(errEl);
     }
   }
 
   loadingText.style.color = '#cc5555';
-  loadingText.innerText = '[!] مش قادر يولّد صورة — تأكد من الـ OpenRouter key وجرب تاني.';
+  loadingText.innerText = '[!] مش قادر يولّد صورة — شوف الـ debug فوق.';
   if(msgs) msgs.scrollTop = msgs.scrollHeight;
 }
 
