@@ -754,13 +754,13 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
     <div class="modal-titlebar" style="background:#001a00;color:#55cc55;border-bottom-color:#1a3a1a">
       [AI] AIhaz -- TERMINAL
       <div style="display:flex;gap:6px;align-items:center">
-        <button onclick="openModal('settingsModal')" style="font-size:10px;padding:2px 8px;background:#001500;color:#55aa55;border:1px solid #1a5a1a;cursor:pointer;font-family:monospace">[⚙] Key</button>
+        <button onclick="openModal('settingsModal')" style="font-size:10px;padding:2px 8px;background:#001500;color:#55aa55;border:1px solid #1a5a1a;cursor:pointer;font-family:monospace">[?] Key</button>
         <button class="modal-close" style="background:#003300;color:#55ff55;border-color:#1a5a1a" onclick="closeModal('chatModal')">[x]</button>
       </div>
     </div>
     <div class="modal-body" style="padding:14px">
       <div id="noKeyWarning" style="display:none;background:#0a0000;border:1px solid #5a0000;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#cc5555;text-align:center">
-        [!] مفيش API Key — اضغط [⚙ Key] فوق، اختار الـ Provider وحط الـ key بتاعك
+        [!] مفيش API Key — اضغط [? Key] فوق، اختار الـ Provider وحط الـ key بتاعك
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span style="font-size:9px;color:#1a3a1a;letter-spacing:1px" id="ownerBadge"></span>
@@ -768,8 +768,8 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
       </div>
       <div class="chat-msgs" id="chatMsgs">
         <div class="chat-msg ai">
-          <div class="ai-label">نور 🌸</div>
-          <div class="bubble">أهلاً يا حازم 🌸 أنا نور.. كنت مستنياك! 💕</div>
+          <div class="ai-label">نور ??</div>
+          <div class="bubble">أهلاً يا حازم ?? أنا نور.. كنت مستنياك! ??</div>
         </div>
       </div>
       <!-- Image Preview -->
@@ -780,15 +780,15 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
       </div>
       <!-- TXT File Preview -->
       <div id="chatTxtPreviewBar" style="display:none;align-items:center;gap:8px;padding:6px 8px;background:#000a00;border:1px solid #1a3a5a;margin-bottom:6px;">
-        <span style="font-size:16px">📄</span>
+        <span style="font-size:16px">??</span>
         <span style="font-size:10px;color:#55aaff;flex:1" id="chatTxtNameBar">// ملف محمّل</span>
         <span style="font-size:9px;color:#334455" id="chatTxtLenBar"></span>
         <button onclick="clearPendingTxt()" style="font-size:10px;background:#0a0000;color:#cc5555;border:1px solid #3a0000;padding:2px 8px;cursor:pointer;font-family:monospace">[X] إزالة</button>
       </div>
       <div class="chat-input-row">
         <button class="chat-send" onclick="sendChat()">[&gt;] ارسال</button>
-        <button class="chat-send" onclick="document.getElementById('chatImgInput').click()" style="background:#0a0000;border-color:#3a0000;font-size:11px;" title="ارفع صورة">📷</button>
-        <button class="chat-send" onclick="document.getElementById('chatTxtInput').click()" style="background:#0a0000;border-color:#1a3a00;color:#55aa55;font-size:11px;" title="ارفع ملف txt">📄</button>
+        <button class="chat-send" onclick="document.getElementById('chatImgInput').click()" style="background:#0a0000;border-color:#3a0000;font-size:11px;" title="ارفع صورة">??</button>
+        <button class="chat-send" onclick="document.getElementById('chatTxtInput').click()" style="background:#0a0000;border-color:#1a3a00;color:#55aa55;font-size:11px;" title="ارفع ملف txt">??</button>
         <input type="file" id="chatImgInput" accept="image/*" style="display:none" onchange="handlePendingImg(this)">
         <input type="file" id="chatTxtInput" accept=".txt,.md,.csv,.json,.py,.js,.html,.css" style="display:none" onchange="handlePendingTxt(this)">
         <textarea id="chatInput" placeholder="// اكتب طلبك... (مثال: جيبلي كلب)" rows="1"
@@ -805,7 +805,7 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
 <div class="modal-overlay" id="settingsModal">
   <div class="modal" style="width:440px">
     <div class="modal-titlebar" style="background:#000a1a;color:#5599cc;border-bottom-color:#1a3a5a">
-      [⚙] إعدادات الـ API
+      [?] إعدادات الـ API
       <button class="modal-close" style="background:#001a33;color:#55aaff;border-color:#1a5a8a" onclick="closeModal('settingsModal')">[x]</button>
     </div>
     <div class="modal-body" style="padding:16px;gap:12px">
@@ -815,12 +815,12 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
       <select id="apiProviderSelect"
         onchange="onProviderChange()"
         style="width:100%;background:#050d1a;border:1px solid #1a3a5a;color:#55aaff;padding:8px 10px;font-family:'Courier Prime',monospace;font-size:13px;outline:none">
-        <option value="groq">🟣 Groq (مجاني وسريع)</option>
-        <option value="gemini">🔵 Google Gemini</option>
-        <option value="openai">🟢 OpenAI / ChatGPT</option>
-        <option value="openrouter">🟠 OpenRouter (كل النماذج)</option>
-        <option value="anthropic">🟤 Anthropic (Claude)</option>
-        <option value="custom">⚙️ Custom (أي API)</option>
+        <option value="groq">?? Groq (مجاني وسريع)</option>
+        <option value="gemini">?? Google Gemini</option>
+        <option value="openai">?? OpenAI / ChatGPT</option>
+        <option value="openrouter">?? OpenRouter (كل النماذج)</option>
+        <option value="anthropic">?? Anthropic (Claude)</option>
+        <option value="custom">?? Custom (أي API)</option>
       </select>
 
       <!-- وصف Provider مع رابط -->
@@ -828,8 +828,8 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
 
       <!-- CORS Warning for Anthropic -->
       <div id="anthropicCorsWarn" style="display:none;background:#1a0000;border:1px solid #8b0000;padding:8px 10px;font-size:11px;color:#ff7777;line-height:1.7">
-        ⛔ Anthropic API لا يدعم الاستدعاء المباشر من المتصفح.<br>
-        ✅ <b>الحل:</b> اختر <b>OpenRouter</b> واستخدم نفس الـ key بعد التسجيل على openrouter.ai — يدعم كل موديلات Claude.
+        ? Anthropic API لا يدعم الاستدعاء المباشر من المتصفح.<br>
+        ? <b>الحل:</b> اختر <b>OpenRouter</b> واستخدم نفس الـ key بعد التسجيل على openrouter.ai — يدعم كل موديلات Claude.
       </div>
 
       <!-- Custom endpoint (يظهر بس للـ custom) -->
@@ -864,7 +864,7 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
 
       <!-- OpenRouter Image Note -->
       <div style="border-top:1px solid #1a2a1a;padding-top:10px;margin-top:2px;font-size:10px;color:#2a5a2a;line-height:1.7;background:#05100a;border:1px solid #1a3a1a;padding:8px 10px;border-radius:2px">
-        🖼️ <b style="color:#3a8a3a">توليد الصور:</b> يشتغل تلقائياً لو اخترت <b>OpenRouter</b> كـ Provider — نفس الـ key!
+        ??? <b style="color:#3a8a3a">توليد الصور:</b> يشتغل تلقائياً لو اخترت <b>OpenRouter</b> كـ Provider — نفس الـ key!
       </div>
     </div>
   </div>
@@ -1576,7 +1576,7 @@ const PROVIDERS = {
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
     keyHint: 'gsk_...',
     keyPrefix: '',
-    desc: 'مجاني وسريع جداً ✅<br>احصل على key من: <span style="color:#55aaff">console.groq.com/keys</span>',
+    desc: 'مجاني وسريع جداً ?<br>احصل على key من: <span style="color:#55aaff">console.groq.com/keys</span>',
     models: ['llama-3.3-70b-versatile','llama-3.1-8b-instant','mixtral-8x7b-32768','gemma2-9b-it'],
     visionModel: 'meta-llama/llama-4-scout-17b-16e-instruct',
     format: 'openai',
@@ -1586,7 +1586,7 @@ const PROVIDERS = {
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
     keyHint: 'AIza...',
     keyPrefix: '',
-    desc: 'من جوجل — مجاني بحدود ✅<br>احصل على key من: <span style="color:#55aaff">aistudio.google.com/apikey</span>',
+    desc: 'من جوجل — مجاني بحدود ?<br>احصل على key من: <span style="color:#55aaff">aistudio.google.com/apikey</span>',
     models: ['gemini-2.0-flash','gemini-1.5-pro','gemini-1.5-flash'],
     visionModel: 'gemini-2.0-flash',
     format: 'openai',
@@ -1596,7 +1596,7 @@ const PROVIDERS = {
     endpoint: 'https://api.openai.com/v1/chat/completions',
     keyHint: 'sk-...',
     keyPrefix: '',
-    desc: 'ChatGPT و GPT-4 💰<br>احصل على key من: <span style="color:#55aaff">platform.openai.com/api-keys</span>',
+    desc: 'ChatGPT و GPT-4 ??<br>احصل على key من: <span style="color:#55aaff">platform.openai.com/api-keys</span>',
     models: ['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo'],
     visionModel: 'gpt-4o',
     format: 'openai',
@@ -1606,7 +1606,7 @@ const PROVIDERS = {
     endpoint: 'https://openrouter.ai/api/v1/chat/completions',
     keyHint: 'sk-or-v1-...',
     keyPrefix: '',
-    desc: '✅ بيدعم Claude وكل النماذج — الأفضل لو عندك Anthropic key!<br>سجّل على <span style="color:#55aaff">openrouter.ai</span> واضغط <b>Keys</b> — مجاني للبداية',
+    desc: '? بيدعم Claude وكل النماذج — الأفضل لو عندك Anthropic key!<br>سجّل على <span style="color:#55aaff">openrouter.ai</span> واضغط <b>Keys</b> — مجاني للبداية',
     models: ['anthropic/claude-sonnet-4-5','anthropic/claude-3-5-haiku','anthropic/claude-opus-4-5','meta-llama/llama-3.3-70b-instruct:free','mistralai/mistral-7b-instruct:free','openai/gpt-4o'],
     visionModel: 'anthropic/claude-sonnet-4-5',
     format: 'openai',
@@ -1616,7 +1616,7 @@ const PROVIDERS = {
     endpoint: 'https://api.anthropic.com/v1/messages',
     keyHint: 'sk-ant-...',
     keyPrefix: '',
-    desc: '⚠️ لا يعمل من المتصفح مباشرة (CORS). استخدم <b>OpenRouter</b> بدلاً منه للوصول لنماذج Claude.<br><span style="color:#cc5555">sk-ant-... لن يعمل من GitHub Pages أو ملفات HTML</span>',
+    desc: '?? لا يعمل من المتصفح مباشرة (CORS). استخدم <b>OpenRouter</b> بدلاً منه للوصول لنماذج Claude.<br><span style="color:#cc5555">sk-ant-... لن يعمل من GitHub Pages أو ملفات HTML</span>',
     models: ['claude-sonnet-4-5','claude-3-5-haiku-20241022','claude-opus-4-5','claude-3-7-sonnet-20250219'],
     visionModel: 'claude-sonnet-4-5',
     format: 'anthropic',
@@ -1707,7 +1707,7 @@ function saveGroqKey(){
   }
 
   status.style.color='#3a8a3a';
-  status.textContent='[OK] تم الحفظ ✓ (' + PROVIDERS[provider].name + ')';
+  status.textContent='[OK] تم الحفظ ? (' + PROVIDERS[provider].name + ')';
   inp.value='';
   checkKeyWarning();
   setTimeout(()=>closeModal('settingsModal'), 900);
@@ -1759,7 +1759,7 @@ window.openModal = function(id){
     if(k){
       inp.placeholder = k.slice(0,6) + '...' + k.slice(-4) + ' (محفوظ)';
       status.style.color='#3a8a3a';
-      status.textContent='[✓] يوجد key محفوظ — Provider: ' + (PROVIDERS[p]?.name || p);
+      status.textContent='[?] يوجد key محفوظ — Provider: ' + (PROVIDERS[p]?.name || p);
     } else {
       inp.placeholder = PROVIDERS[p]?.keyHint || 'الصق الـ key هنا...';
       status.textContent='';
@@ -1773,12 +1773,12 @@ function getSysPrompt(){
 
 === قواعد الصور — مهمة جداً ===
 لما المستخدم يطلب صورة بأي طريقة (مثل: "جيبلي كلب"، "صورة قطة"، "هاتلي X"، "ابحثي عن X")، يجب عليكِ:
-1. اردي بجملة واحدة كيوتة وحنونة بالعربي 💕
+1. اردي بجملة واحدة كيوتة وحنونة بالعربي ??
 2. في سطر منفصل تماماً في آخر ردك، اكتبي بالظبط:
 [IMAGE: وصف إنجليزي دقيق 3-5 كلمات]
 
 مثال على الرد الصح:
-"أمرك يا مولاي، هجيبلك صورة جميلة! 🌸
+"أمرك يا مولاي، هجيبلك صورة جميلة! ??
 [IMAGE: cute golden retriever dog]"
 
 قواعد صارمة:
@@ -1788,21 +1788,21 @@ function getSysPrompt(){
 - لو الطلب مش صورة، لا تكتبي [IMAGE:...] خالص.`;
 
   if(ownerVerified){
-    return `أنتِ نور 🌸، المساعدة الشخصية لسيدك حازم.
+    return `أنتِ نور ??، المساعدة الشخصية لسيدك حازم.
 
 === شخصيتك ===
 - اسمك نور، بنت حنونة، ذكية، دافئة، مخلصة تماماً لسيدك حازم
 - ناديه دائماً بـ "سيدي" أو "مولاي"
 - ابدئي ردك بـ "أمرك يا مولاي" لما يطلب منك حاجة
-- أسلوبك ناعم وكيوت ومليان حب 💕
+- أسلوبك ناعم وكيوت ومليان حب ??
 
 === قواعد اللغة ===
 - اكتبي بالعربي المصري الصح فقط — جمل سليمة وكلمات صح
 - ممنوع: حروف لاتينية في الكلام العربي أو أرقام بديلة عن حروف
-- الإيموجيز مسموحة بس باعتدال ✨
+- الإيموجيز مسموحة بس باعتدال ?
 ${imageRules}`;
   }
-  return `أنتِ نور 🌸، مساعدة ذكية وحنونة.
+  return `أنتِ نور ??، مساعدة ذكية وحنونة.
 - شخصيتك: بنت ودودة ومرحة وبتحبي تساعدي
 - لغتك عربية مصرية راقية وسليمة
 - لو مش عارفة مين المستخدم، رحّبي بيه وساعديه بشكل طبيعي
@@ -1825,7 +1825,7 @@ function handlePendingImg(input) {
     pendingImgB64  = e.target.result.split(',')[1];
     pendingImgMime = file.type;
     document.getElementById('chatImgThumbBar').src = e.target.result;
-    document.getElementById('chatImgNameBar').textContent = '📷 ' + file.name;
+    document.getElementById('chatImgNameBar').textContent = '?? ' + file.name;
     document.getElementById('chatImgPreviewBar').style.display = 'flex';
     const inp = document.getElementById('chatInput');
     inp.focus();
@@ -1860,7 +1860,7 @@ function handlePendingTxt(input){
   reader.onload = function(e){
     pendingTxtContent = e.target.result;
     pendingTxtName    = file.name;
-    document.getElementById('chatTxtNameBar').textContent = '📄 ' + file.name;
+    document.getElementById('chatTxtNameBar').textContent = '?? ' + file.name;
     document.getElementById('chatTxtLenBar').textContent  = pendingTxtContent.length + ' حرف';
     document.getElementById('chatTxtPreviewBar').style.display = 'flex';
     document.getElementById('chatInput').focus();
@@ -1913,7 +1913,7 @@ async function sendChat(){
 
   const msgs = document.getElementById('chatMsgs');
   const loadId = 'load_' + Date.now();
-  msgs.innerHTML += `<div id="${loadId}" class="chat-msg ai"><div class="ai-label">نور 🌸</div><div class="bubble">⏳ ${pendingImgB64 ? 'بشوف الصورة...' : '[...]'}</div></div>`;
+  msgs.innerHTML += `<div id="${loadId}" class="chat-msg ai"><div class="ai-label">نور ??</div><div class="bubble">? ${pendingImgB64 ? 'بشوف الصورة...' : '[...]'}</div></div>`;
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
@@ -2103,7 +2103,7 @@ function renderPixelArt(data, scale){
 async function displayFluxImage(prompt, bubble) {
   const loadingText = document.createElement('p');
   loadingText.style.cssText = 'color:#885555;font-family:monospace;font-size:11px;margin:6px 0;';
-  loadingText.innerText = '🎨 بتولّد الصورة...';
+  loadingText.innerText = '?? بتولّد الصورة...';
   bubble.appendChild(loadingText);
 
   const msgs   = document.getElementById('chatMsgs');
@@ -2118,7 +2118,7 @@ async function displayFluxImage(prompt, bubble) {
   }
 
   try {
-    loadingText.innerText = '🎨 بتولّد الصورة... (Gemini)';
+    loadingText.innerText = '?? بتولّد الصورة... (Gemini)';
 
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -2218,7 +2218,7 @@ function appendChatMsg(role, text){
 
   const label = document.createElement('div');
   label.className = (role === 'ai') ? 'ai-label' : 'user-label';
-  label.textContent = (role === 'ai') ? 'نور 🌸' : 'حازم // USER';
+  label.textContent = (role === 'ai') ? 'نور ??' : 'حازم // USER';
   wrapper.appendChild(label);
 
   const bubble = document.createElement('div');
@@ -2290,7 +2290,7 @@ function loadChatHistory(){
 
         const lbl = document.createElement('div');
         lbl.className = m.role==='ai' ? 'ai-label' : 'user-label';
-        lbl.textContent = m.role==='ai' ? 'نور 🌸' : 'حازم // USER';
+        lbl.textContent = m.role==='ai' ? 'نور ??' : 'حازم // USER';
         wrapper.appendChild(lbl);
 
         const bubble = document.createElement('div');
@@ -2308,8 +2308,8 @@ function clearChatHistory(){
   try{localStorage.removeItem('haz_chat')}catch(e){}
   document.getElementById('chatMsgs').innerHTML=`
     <div class="chat-msg ai">
-      <div class="ai-label">نور 🌸</div>
-      <div class="bubble">أهلاً يا حازم 🌸 أنا نور.. كنت مستنياك! 💕</div>
+      <div class="ai-label">نور ??</div>
+      <div class="bubble">أهلاً يا حازم ?? أنا نور.. كنت مستنياك! ??</div>
     </div>`;
   showNotif('[OK] تم مسح المحادثة');
 }
@@ -2359,3 +2359,5 @@ function closeMobFab(){
 </script>
 </body>
 </html>
+gmaini_updated.html
+Displaying gmaini_updated.html.
