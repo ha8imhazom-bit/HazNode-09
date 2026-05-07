@@ -871,13 +871,93 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
 </div>
 
 <script>
+
 async function sha256(str) {
-  const buf = new TextEncoder().encode(str);
-  const hashBuf = await crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(hashBuf))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  try {
+    const buf = new TextEncoder().encode(str);
+    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hashBuf))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  } catch (e) {
+    console.error("Hash error:", e);
+    return null;
+  }
 }
+
+async function tryLogin() {
+  const val = document.getElementById('passInput').value;
+  const err = document.getElementById('errMsg');
+  const box = document.getElementById('loginBox');
+  if (isLocked()) {
+    err.style.color = '#cc0000';
+    err.textContent = '(!) محظور -- ' + lockRemaining();
+    document.getElementById('passInput').value = '';
+    return;
+  }
+  const h = await sha256(val);
+  if (h === PASS_HASH) {
+    setLock({ attempts: 0, lockedUntil: null });
+    err.style.color = '#55cc55';
+    err.textContent = '[OK] ACCESS GRANTED -- جاري الدخول...';
+    setTimeout(() => {
+      isLoggedIn = true;
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('warningBar').style.display = 'none';
+      const mp = document.getElementById('mainPage');
+      mp.style.display = 'flex';
+      mp.style.flexDirection = 'column';
+      if (typeof startClock === 'function') startClock();
+      if (typeof loadFromStorage === 'function') loadFromStorage();
+    }, 700);
+  } else {
+    const d = getLock();
+    const attempts = (d.attempts || 0) + 1;
+    if (attempts >= 3) {
+      setLock({ attempts, lockedUntil: Date.now() + 24 * 60 * 60 * 1000 });
+      err.style.color = '#cc0000';
+      err.textContent = '(!) محظور 24 ساعة!';
+      document.getElementById('passInput').disabled = true;
+      document.querySelector('.login-btn').disabled = true;
+      if (typeof startLockTimer === 'function') startLockTimer();
+    } else {
+      setLock({ attempts, lockedUntil: null });
+      err.style.color = '#cc0000';
+      err.textContent = '[ERR] ACCESS DENIED -- متبقيلك ' + (3 - attempts) + ' محاولة';
+      box.classList.remove('shake');
+      void box.offsetWidth;
+      box.classList.add('shake');
+    }
+    document.getElementById('passInput').value = '';
+  }
+}
+
+async function confirmDelete() {
+  const pass = document.getElementById('deletePass').value;
+  const err  = document.getElementById('deleteErr');
+  const h    = await sha256(pass);
+  if (h === DELETE_HASH) {
+    appState.images = []; appState.video = []; appState.doc = [];
+    appState.pdf = []; appState.audio = []; appState.custom = {}; appState.history = [];
+    textDocs = []; chatHistory = [];
+    try {
+      localStorage.removeItem('haz_data');
+      localStorage.removeItem('haz_txt');
+      localStorage.removeItem('haz_chat');
+    } catch(e) {}
+    renderHomeGrid(); updateImgCount();
+    ['video','doc','pdf','audio'].forEach(t => renderTypeList(t));
+    document.getElementById('quickImgList').innerHTML = '';
+    document.getElementById('previewImg').style.display = 'none';
+    closeModal('deleteModal');
+    showNotif('[OK] تم مسح كل شيء');
+  } else {
+    err.textContent = '[ERR] باسورد غلط!';
+    document.getElementById('deletePass').value = '';
+  }
+}
+
+
 
 // ============================================================
 // AUTH — SHA-256 hashes only, no plaintext stored here
@@ -2366,5 +2446,3 @@ function closeMobFab(){
 </script>
 </body>
 </html>
-gmaini_fixed_final.html
-Displaying gmaini_fixed_final.html.
