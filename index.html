@@ -872,92 +872,98 @@ body{font-family:'Courier Prime',monospace;background:var(--bg);color:var(--text
 
 <script>
 
+const PASS_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // admin123
+const DELETE_HASH = '177699df881fd53880457635c91cf694775d7e63b1569a98e27c006437998b67'; // delete123
+const OWNER_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918';
+
+
+// 1. التشفير الحديث (يتطلب بيئة آمنة مثل GitHub Pages)
 async function sha256(str) {
-  try {
-    const buf = new TextEncoder().encode(str);
-    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
-    return Array.from(new Uint8Array(hashBuf))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  } catch (e) {
-    console.error("Hash error:", e);
-    return null;
-  }
-}
-
-async function tryLogin() {
-  const val = document.getElementById('passInput').value;
-  const err = document.getElementById('errMsg');
-  const box = document.getElementById('loginBox');
-  if (isLocked()) {
-    err.style.color = '#cc0000';
-    err.textContent = '(!) محظور -- ' + lockRemaining();
-    document.getElementById('passInput').value = '';
-    return;
-  }
-  const h = await sha256(val);
-  if (h === PASS_HASH) {
-    setLock({ attempts: 0, lockedUntil: null });
-    err.style.color = '#55cc55';
-    err.textContent = '[OK] ACCESS GRANTED -- جاري الدخول...';
-    setTimeout(() => {
-      isLoggedIn = true;
-      document.getElementById('loginPage').style.display = 'none';
-      document.getElementById('warningBar').style.display = 'none';
-      const mp = document.getElementById('mainPage');
-      mp.style.display = 'flex';
-      mp.style.flexDirection = 'column';
-      if (typeof startClock === 'function') startClock();
-      if (typeof loadFromStorage === 'function') loadFromStorage();
-    }, 700);
-  } else {
-    const d = getLock();
-    const attempts = (d.attempts || 0) + 1;
-    if (attempts >= 3) {
-      setLock({ attempts, lockedUntil: Date.now() + 24 * 60 * 60 * 1000 });
-      err.style.color = '#cc0000';
-      err.textContent = '(!) محظور 24 ساعة!';
-      document.getElementById('passInput').disabled = true;
-      document.querySelector('.login-btn').disabled = true;
-      if (typeof startLockTimer === 'function') startLockTimer();
-    } else {
-      setLock({ attempts, lockedUntil: null });
-      err.style.color = '#cc0000';
-      err.textContent = '[ERR] ACCESS DENIED -- متبقيلك ' + (3 - attempts) + ' محاولة';
-      box.classList.remove('shake');
-      void box.offsetWidth;
-      box.classList.add('shake');
-    }
-    document.getElementById('passInput').value = '';
-  }
-}
-
-async function confirmDelete() {
-  const pass = document.getElementById('deletePass').value;
-  const err  = document.getElementById('deleteErr');
-  const h    = await sha256(pass);
-  if (h === DELETE_HASH) {
-    appState.images = []; appState.video = []; appState.doc = [];
-    appState.pdf = []; appState.audio = []; appState.custom = {}; appState.history = [];
-    textDocs = []; chatHistory = [];
     try {
-      localStorage.removeItem('haz_data');
-      localStorage.removeItem('haz_txt');
-      localStorage.removeItem('haz_chat');
-    } catch(e) {}
-    renderHomeGrid(); updateImgCount();
-    ['video','doc','pdf','audio'].forEach(t => renderTypeList(t));
-    document.getElementById('quickImgList').innerHTML = '';
-    document.getElementById('previewImg').style.display = 'none';
-    closeModal('deleteModal');
-    showNotif('[OK] تم مسح كل شيء');
-  } else {
-    err.textContent = '[ERR] باسورد غلط!';
-    document.getElementById('deletePass').value = '';
-  }
+        const buf = new TextEncoder().encode(str);
+        const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+        return Array.from(new Uint8Array(hashBuf))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+    } catch (e) {
+        console.error("Error hashing:", e);
+        return null;
+    }
 }
 
+// 2. دالة الدخول (Async)
+async function tryLogin() {
+    const val = document.getElementById('passInput').value;
+    const err = document.getElementById('errMsg');
+    const box = document.getElementById('loginBox');
+    if (isLocked()) {
+        err.style.color = '#cc0000';
+        err.textContent = '(!) محظور -- ' + lockRemaining();
+        document.getElementById('passInput').value = '';
+        return;
+    }
+    const h = await sha256(val);
+    if (h === PASS_HASH) {
+        setLock({ attempts: 0, lockedUntil: null });
+        err.style.color = '#55cc55';
+        err.textContent = '[OK] ACCESS GRANTED -- جاري الدخول...';
+        setTimeout(() => {
+            isLoggedIn = true;
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('warningBar').style.display = 'none';
+            const mp = document.getElementById('mainPage');
+            mp.style.display = 'flex';
+            mp.style.flexDirection = 'column';
+            if (typeof startClock === "function") startClock();
+            if (typeof loadFromStorage === "function") loadFromStorage();
+        }, 700);
+    } else {
+        const d = getLock();
+        const attempts = (d.attempts || 0) + 1;
+        if (attempts >= 3) {
+            setLock({ attempts, lockedUntil: Date.now() + 24 * 60 * 60 * 1000 });
+            err.style.color = '#cc0000';
+            err.textContent = '(!) محظور 24 ساعة!';
+            document.getElementById('passInput').disabled = true;
+            document.querySelector('.login-btn').disabled = true;
+            if (typeof startLockTimer === "function") startLockTimer();
+        } else {
+            setLock({ attempts, lockedUntil: null });
+            err.style.color = '#cc0000';
+            err.textContent = '[ERR] ACCESS DENIED -- متبقيلك ' + (3 - attempts) + ' محاولة';
+            box.classList.remove('shake');
+            void box.offsetWidth;
+            box.classList.add('shake');
+        }
+        document.getElementById('passInput').value = '';
+    }
+}
 
+// 3. دالة الحذف (Async)
+async function confirmDelete() {
+    const pass = document.getElementById('deletePass').value;
+    const err  = document.getElementById('deleteErr');
+    const h    = await sha256(pass);
+    if (h === DELETE_HASH) {
+        appState.images = []; appState.video = []; appState.doc = [];
+        appState.pdf = []; appState.audio = []; appState.custom = {}; appState.history = [];
+        textDocs = []; chatHistory = [];
+        try {
+            localStorage.removeItem('haz_data');
+            localStorage.removeItem('haz_txt');
+            localStorage.removeItem('haz_chat');
+        } catch(e) {}
+        renderHomeGrid(); updateImgCount();
+        ['video','doc','pdf','audio'].forEach(t => renderTypeList(t));
+        document.getElementById('quickImgList').innerHTML = '';
+        document.getElementById('previewImg').style.display = 'none';
+        closeModal('deleteModal');
+        showNotif('[OK] تم مسح كل شيء');
+    } else {
+        err.textContent = '[ERR] باسورد غلط!';
+        document.getElementById('deletePass').value = '';
+    }
+}
 
 // ============================================================
 // AUTH — SHA-256 hashes only, no plaintext stored here
@@ -966,7 +972,8 @@ const PASS_HASH   = 'c195bad17938e5fd4a51ec160340a2b650eb4cead74be81f75fffc5e7d5
 const DELETE_HASH = '4a9b40a235826708575abc1e0653b3fe22634a239082001293121bf377b11b0a';
 const OWNER_HASH  = '8205b33972af5bb29f3a9a1e9b4a97bf49acaca22ee7fd03bf597d141488e30d';
 
-
+function sha256(str){
+  function rr(v,a){return(v>>>a)|(v<<(32-a))}
   const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
   let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
   const b=[...new TextEncoder().encode(str)];
